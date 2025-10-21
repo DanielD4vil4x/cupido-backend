@@ -1,8 +1,10 @@
 from django.urls import path
-from apps.auth_app.views.views import home_view
-
+from .views import auth, verification
 
 urlpatterns = [
-    path('', home_view),
+    path("login/", auth.LoginView.as_view(), name="login"),
+    path("register/", auth.RegisterView.as_view(), name="register"),
+    path("verify-email/", verification.EmailVerificationView.as_view(), name="verify-email"),
 ]
+
 

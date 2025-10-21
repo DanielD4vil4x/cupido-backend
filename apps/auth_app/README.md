@@ -166,3 +166,20 @@ El proceso incluye validaciones, políticas de seguridad, doble factor de autent
 
 Este módulo garantiza la **autenticación segura, rápida y confiable** de los usuarios en el sistema.  
 Su objetivo es proteger la información personal, prevenir accesos no autorizados y mantener la integridad del entorno digital de *cupido-backend*.
+
+# auth_app
+
+Módulo de autenticación del proyecto **cUPido**.
+
+### Funcionalidades
+- Registro con correo institucional (@unipamplona.edu.co)
+- Verificación por código (Redis + email)
+- Login con JWT (SimpleJWT)
+- Permisos personalizados
+
+### Endpoints
+| Método | Ruta | Descripción |
+|--------|------|--------------|
+| POST | `/api/auth/register/` | Registra nuevo usuario |
+| POST | `/api/auth/verify-email/` | Envía código de verificación |
+| POST | `/api/auth/login/` | Autentica y devuelve tokens JWT |
