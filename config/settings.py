@@ -27,15 +27,18 @@ DATABASES = {
 # Application definition
 
 INSTALLED_APPS = [
+    #apps default
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    #apps de dependencias
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
+    #apps internas
     'apps.auth_app',
     'apps.match_app',
     'apps.profile_app',
@@ -136,3 +139,10 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REDIS_URL = os.getenv("REDIS_URL")
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+DEFAULT_FROM_EMAIL = "no-reply@cupido.com"

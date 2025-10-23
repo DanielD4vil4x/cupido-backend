@@ -23,5 +23,5 @@ python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 
-#Pendiente la configuracion de base de datos local y las migraciones. 
+#Pendiente instalacion de Docker para desarrollo. 
 

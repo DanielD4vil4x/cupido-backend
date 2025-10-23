@@ -10,15 +10,21 @@ r = redis.StrictRedis.from_url(settings.REDIS_URL, decode_responses=True)
 
 class EmailVerificationView(APIView):
     """
-    Envía un código de verificación al correo institucional.
+    Paso 1 del registro:
+    - Recibe correo institucional
+    - Genera código aleatorio de 6 dígitos
+    - Lo guarda en Redis por 10 minutos
+    - Envía el código por correo
     """
     throttle_scope = "verify_email"
 
     def post(self, request):
         email = request.data.get("email")
         if not email or not email.endswith("@unipamplona.edu.co"):
-            return Response({"error": "Correo institucional inválido."},
-                            status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Correo institucional inválido."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         code = f"{random.randint(100000, 999999)}"
         r.setex(f"verify:{email}", 600, code)  # TTL de 10 min
@@ -26,8 +32,9 @@ class EmailVerificationView(APIView):
         send_mail(
             "Código de verificación - cUPido",
             f"Tu código es: {code} (válido por 10 minutos).",
-            "no-reply@cupido.com",
+            settings.DEFAULT_FROM_EMAIL,
             [email],
         )
 
         return Response({"message": "Código enviado con éxito."}, status=200)
+

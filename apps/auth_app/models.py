@@ -1,10 +1,14 @@
-# Puedes usar este archivo para proxy models si necesitas lógica adicional
-# sobre tus modelos de legacy_models.
-
+from django.db import models
 from legacy_models.models import Usuario
 
 class UsuarioProxy(Usuario):
+    """
+    Proxy model que expone 'id' como alias de 'usuario_id'
+    para compatibilidad con SimpleJWT y otros módulos.
+    """
     class Meta:
         proxy = True
-        verbose_name = "Usuario Proxy"
-        verbose_name_plural = "Usuarios Proxy"
+
+    @property
+    def id(self):
+        return self.usuario_id

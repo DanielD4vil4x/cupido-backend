@@ -7,7 +7,7 @@ class UsuarioSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = Usuario
-        fields = ["idusuario", "nombre", "correo"]
+        fields = ["usuario_id", "nombres", "email"]
 
 
 class LoginSerializer(serializers.Serializer):
@@ -15,4 +15,4 @@ class LoginSerializer(serializers.Serializer):
     Valida los campos de login.
     """
     email = serializers.EmailField()
-    password = serializers.CharField(write_only=True)
+    contrasena = serializers.CharField(write_only=True)
