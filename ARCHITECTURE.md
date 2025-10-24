@@ -80,13 +80,6 @@ cupido-backend/
 - `apps.py`: App configuration
 - `README.md`: Detailed auth module documentation
 
-### apps/[other_apps]/
-- `models.py`: Database models (empty placeholders)
-- `views.py`: API views (empty placeholders)
-- `admin.py`: Admin configuration (empty)
-- `apps.py`: App configuration
-- `tests.py`: Test files (empty)
-- `migrations/`: Database migrations
 
 ### legacy_models/
 - `models.py`: Legacy database models (managed=False)
@@ -104,8 +97,6 @@ cupido-backend/
 - **Email Verification Bypass**: No actual age verification or other validations mentioned in README
 
 ### Code Quality Issues
-- **Mixed Languages**: Code comments and documentation in Spanish, but code in English
-- **Inconsistent Naming**: Mix of Spanish field names (nombres, apellidos) and English (email, password)
 - **Hardcoded Values**: Email domain hardcoded in verification view
 - **Global Redis Connection**: Redis connection created globally in views
 - **No Error Handling**: Basic exception handling in registration
@@ -113,8 +104,6 @@ cupido-backend/
 
 ### Architecture Issues
 - **Legacy Dependency**: Heavy reliance on unmanaged legacy models
-- **Incomplete Implementation**: Most apps are just placeholders
-- **No Tests**: Test files are empty
 - **No Documentation**: API documentation missing (no Swagger/OpenAPI)
 - **Environment Handling**: No validation of required environment variables
 
@@ -146,15 +135,12 @@ cupido-backend/
    - Implement email change verification
 
 ### Code Quality
-1. **Standardize Language**: Choose one language for comments and documentation
 2. **Add Comprehensive Validation**: Implement all validations mentioned in README
 3. **Error Handling**: Add proper exception handling and logging
 4. **Code Organization**: Separate concerns better (e.g., services layer)
 
 ### Architecture Improvements
-1. **Complete Feature Implementation**: Develop the placeholder apps
 2. **API Documentation**: Add Swagger/OpenAPI documentation
-3. **Testing**: Implement comprehensive test suite
 4. **Database Migration**: Properly migrate legacy schema to Django-managed models
 
 ### Configuration
@@ -172,5 +158,3 @@ cupido-backend/
 ### Development Practices
 1. **Code Standards**: Add pre-commit hooks for code formatting (black, isort)
 2. **Documentation**: Maintain up-to-date API and architecture docs
-3. **Version Control**: Implement proper branching strategy (already mentioned in README)
-4. **Code Review**: Establish code review processes

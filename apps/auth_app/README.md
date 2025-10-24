@@ -40,7 +40,7 @@ El proceso asegura la validez, integridad y seguridad de la información suminis
 
   - Solicita la aceptación explícita de los *Términos y Condiciones* y la *Política de Privacidad* antes del registro.
 
-  - Crea un registro temporal en la base de datos encriptando la contraseña antes de su almacenamiento.
+  - Crea un registro temporal en la base de datos encriptando la contraseña antes de su almacenamiento. Esto esta en revision
 
   - Envía un correo de verificación con enlace o código único para confirmar la propiedad del email.
 
