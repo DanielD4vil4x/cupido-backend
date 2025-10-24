@@ -6,7 +6,7 @@ from rest_framework import status
 
 from legacy_models.models import Usuario
 from apps.auth_app.serializers.verify_serializer import VerifyEmailSerializer
-from apps.auth_app.models import UsuarioProxy
+# UsuarioProxy eliminado, ahora usamos Usuario directamente
 from apps.auth_app.utils.redis_client import delete_key
 from apps.auth_app.utils import codes
 
@@ -40,7 +40,7 @@ class VerifyEmailView(APIView):
                 nombres=registration_payload.get("nombres"),
                 apellidos=registration_payload.get("apellidos"),
                 email=email,
-                contrasena=registration_payload.get("contrasena"),  # ya hasheada
+                password=registration_payload.get("password"),  # ya hasheada
                 apodo=registration_payload.get("apodo", "None"),
                 numerotelefono=registration_payload.get("numerotelefono", "None"),
                 tyc=registration_payload.get("tyc", True),
@@ -61,8 +61,7 @@ class VerifyEmailView(APIView):
 
         # Generar tokens JWT (opcional)
         try:
-            user_proxy = UsuarioProxy.objects.get(pk=user.usuario_id)
-            refresh = RefreshToken.for_user(user_proxy)
+            refresh = RefreshToken.for_user(user)
             tokens = {
                 "refresh": str(refresh),
                 "access": str(refresh.access_token),

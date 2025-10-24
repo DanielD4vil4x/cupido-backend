@@ -153,7 +153,7 @@ class RegisterSerializer(serializers.Serializer):
         raw_pass = data.pop("contrasena", None)
         # Nunca guardar raw password en Redis: hashearla
         if raw_pass:
-            data["contrasena"] = make_password(raw_pass)
+            data["password"] = make_password(raw_pass)  # Cambiar a "password" para compatibilidad con AbstractUser
         # añadir un flag temporal opcional
         data["_from_registration"] = True
         return data
