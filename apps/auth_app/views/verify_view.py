@@ -41,12 +41,12 @@ class VerifyEmailView(APIView):
                 apellidos=registration_payload.get("apellidos"),
                 email=email,
                 contrasena=registration_payload.get("contrasena"),  # ya hasheada
-                apodo=registration_payload.get("apodo", None),
-                numerotelefono=registration_payload.get("numerotelefono", None),
+                apodo=registration_payload.get("apodo", "None"),
+                numerotelefono=registration_payload.get("numerotelefono", "None"),
                 tyc=registration_payload.get("tyc", True),
                 estadocuenta=registration_payload.get("estadocuenta", "Activa"),
                 fechanacimiento=registration_payload.get("fechanacimiento"),
-                sexo=registration_payload.get("sexo", None),
+                genero=registration_payload.get("genero", None),
                 programa=registration_payload.get("programa", None),
             )
         except Exception as e:
