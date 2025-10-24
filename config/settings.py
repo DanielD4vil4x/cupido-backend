@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     # Third-party
     "rest_framework",
     "rest_framework_simplejwt",
+    #"rest_framework_simplejwt.token_blacklist",
     "corsheaders",
 
     # Local apps
@@ -177,7 +178,9 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=int(os.getenv("JWT_ACCESS_MINUTES", 15))),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=int(os.getenv("JWT_REFRESH_DAYS", 7))),
     "ROTATE_REFRESH_TOKENS": os.getenv("JWT_ROTATE_REFRESH_TOKENS", "True").lower() == "true",
-    "BLACKLIST_AFTER_ROTATION": os.getenv("JWT_BLACKLIST_AFTER_ROTATION", "True").lower() == "true",
+    "BLACKLIST_AFTER_ROTATION": False,
+    #os.getenv("JWT_BLACKLIST_AFTER_ROTATION", "True").lower() == "true",
+    "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
 # -------------------------
