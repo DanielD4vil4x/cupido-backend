@@ -8,7 +8,7 @@ from rest_framework.permissions import AllowAny
 from apps.auth_app.serializers.login_serializer import LoginSerializer
 from apps.auth_app.serializers.usuario_serializer import UsuarioSerializer
 from apps.auth_app.utils.tokens import create_jwt_for_user
-from apps.auth_app.models import UsuarioProxy
+from legacy_models.models import Usuario
 
 logger = logging.getLogger(__name__)
 
@@ -39,21 +39,13 @@ class LoginView(APIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        # Crear instancia de UsuarioProxy para compatibilidad con SimpleJWT
-        try:
-            user_proxy = UsuarioProxy.objects.get(pk=user.usuario_id)
-        except UsuarioProxy.DoesNotExist:
-            logger.error(f"❌ UsuarioProxy no encontrado para ID {user.usuario_id}")
-            return Response(
-                {"error": "Error interno al autenticar el usuario."},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
+        # El usuario ya es instancia de Usuario (hereda de AbstractUser)
 
         logger.info(f"✅ Usuario validado correctamente: {user.email} (ID {user.usuario_id})")
 
         # Generar tokens JWT
         try:
-            tokens = create_jwt_for_user(user_proxy)
+            tokens = create_jwt_for_user(user)
             logger.info(f"🎫 Tokens JWT generados para usuario {user.email}")
         except Exception as e:
             logger.error(f"🔥 Error al generar tokens JWT para {user.email}: {e}")
@@ -63,14 +55,14 @@ class LoginView(APIView):
             )
 
         # Actualizar último inicio de sesión (si aplica)
-        if hasattr(user_proxy, "last_login"):
-            user_proxy.last_login = timezone.now()
-            user_proxy.save(update_fields=["last_login"])
+        if hasattr(user, "last_login"):
+            user.last_login = timezone.now()
+            user.save(update_fields=["last_login"])
             logger.debug(f"🕓 last_login actualizado para {user.email}")
 
         # Construir respuesta
         response_payload = {
-            "user": UsuarioSerializer(user_proxy).data,
+            "user": UsuarioSerializer(user).data,
             "access": tokens["access"],
             "refresh": tokens["refresh"],
         }

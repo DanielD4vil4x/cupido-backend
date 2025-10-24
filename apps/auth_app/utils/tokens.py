@@ -22,15 +22,15 @@ def create_jwt_for_user(user) -> dict:
         raise
 
 
-# def blacklist_token(refresh_token: str) -> bool:
-#     """
-#     Invalida un token refresh (lo agrega a la lista negra si está habilitada).
-#     """
-#     try:
-#         token = RefreshToken(refresh_token)
-#         token.blacklist()  # Solo si SIMPLE_JWT['BLACKLIST_AFTER_ROTATION'] = True
-#         logger.info("🔒 Token refresh agregado a la lista negra correctamente.")
-#         return True
-#     except Exception as e:
-#         logger.warning(f"⚠️ No se pudo invalidar el token: {e}")
-#         return False
+def blacklist_token(refresh_token: str) -> bool:
+    """
+    Invalida un token refresh (lo agrega a la lista negra si está habilitada).
+    """
+    try:
+        token = RefreshToken(refresh_token)
+        token.blacklist()  # Solo si SIMPLE_JWT['BLACKLIST_AFTER_ROTATION'] = True
+        logger.info("🔒 Token refresh agregado a la lista negra correctamente.")
+        return True
+    except Exception as e:
+        logger.warning(f"⚠️ No se pudo invalidar el token: {e}")
+        return False
