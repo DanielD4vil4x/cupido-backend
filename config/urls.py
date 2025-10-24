@@ -1,10 +1,8 @@
 from django.contrib import admin
 from django.urls import path, include
 from django.http import JsonResponse
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
-# Optional: DRF schema & Swagger 
-from rest_framework.schemas import get_schema_view
-from rest_framework.documentation import include_docs_urls
 
 API_TITLE = "Cupido API"
 API_VERSION = "v1"
@@ -37,12 +35,8 @@ urlpatterns = [
     path("api/v1/chat/", include(("apps.chat_app.urls", "chat_app"), namespace="chat")),
 
     #Documentación de API
-    path(
-        "api/schema/",
-        get_schema_view(title=API_TITLE, version=API_VERSION, description="Esquema OpenAPI de Cupido"),
-        name="openapi-schema",
-    ),
-    path("api/docs/", include_docs_urls(title=API_TITLE, public=True)),
+    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+    path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema")),
 ]
 
 
