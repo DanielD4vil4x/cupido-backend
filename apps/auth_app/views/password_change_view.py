@@ -1,19 +1,36 @@
-"""Vista para cambio de contraseña estando autenticado."""
+# apps/auth_app/views/password_change_view.py
+"""
+Vista para cambio de contraseña de usuario autenticado.
+Requiere contraseña actual y nueva contraseña válida.
+"""
+
+import logging
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
-from ..permissions import IsAccountActive
-from ..serializers.password_change_serializer import PasswordChangeSerializer
+from rest_framework import status, permissions
+
+from apps.auth_app.serializers.password_change_serializer import PasswordChangeSerializer
+
+logger = logging.getLogger(__name__)
 
 
 class PasswordChangeView(APIView):
-    """Permite al usuario cambiar su contraseña."""
-    permission_classes = [IsAuthenticated, IsAccountActive]
+    """
+    Permite al usuario autenticado cambiar su contraseña.
+    Requiere verificación de contraseña actual.
+    """
+    permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
+        logger.info(f"🔑 Solicitud de cambio de contraseña para usuario {request.user.email}")
         serializer = PasswordChangeSerializer(data=request.data, context={"request": request})
-        if serializer.is_valid():
-            # Cambiar contraseña en base de datos
-            return Response({"detail": "Contraseña cambiada exitosamente."}, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+
+        # Cambiar contraseña
+        serializer.save()
+
+        logger.info(f"✅ Contraseña cambiada exitosamente para {request.user.email}")
+        return Response(
+            {"message": "Contraseña cambiada exitosamente."},
+            status=status.HTTP_200_OK
+        )

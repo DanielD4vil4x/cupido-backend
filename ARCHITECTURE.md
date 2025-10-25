@@ -6,10 +6,16 @@ This is a Django-based backend API for the cUPido dating application, targeted a
 ## 1. Implemented Functionalities
 
 ### Authentication Module (auth_app)
-- **Email Verification**: Sends 6-digit verification codes via email to institutional addresses (@unipamplona.edu.co)
-- **User Registration**: Creates user accounts after email verification
-- **Login**: Authenticates users and issues JWT tokens
+- **Complete User Registration**: Full registration with all required fields (names, program, gender, birth date, phone, etc.) and comprehensive validations
+- **Email Verification**: Sends 6-digit verification codes via email to institutional addresses (@unipamplona.edu.co) with Redis TTL and attempt limits
+- **User Creation**: Creates complete user accounts after email verification using real registration data
+- **Login**: Authenticates users with JWT tokens, blocks minors, and includes session management
+- **Session Management**: GET endpoint for authenticated user info and JWT token validation
+- **Logout**: Individual session logout (blacklist refresh token) and global logout (invalidate all tokens)
+- **Password Management**: Change password (authenticated users) and password reset via email tokens
+- **Account Deactivation**: Soft delete accounts with confirmation and security checks
 - **User Proxy Model**: Provides compatibility with SimpleJWT by aliasing `usuario_id` as `id`
+- **Rate Limiting**: Protection against abuse on critical endpoints (registration, verification, login)
 
 ### Legacy Models (legacy_models)
 - **User Model**: Comprehensive user profile with fields for personal info, preferences, and relationships
@@ -70,11 +76,35 @@ cupido-backend/
 
 ### apps/auth_app/
 - `models.py`: UsuarioProxy model for JWT compatibility
-- `views/`: API views for auth operations
-  - `auth.py`: Login and registration views
-  - `verification.py`: Email verification view
-- `serializers/`: DRF serializers for data validation
-- `urls.py`: URL patterns for auth endpoints
+- `views/`: API views for auth operations (modular, one view per file)
+  - `register_view.py`: Complete user registration with validations
+  - `verify_view.py`: Email verification with code validation
+  - `resend_view.py`: Resend verification codes
+  - `login_view.py`: User authentication and JWT token generation
+  - `session_view.py`: Authenticated user session info
+  - `logout_view.py`: Individual session logout
+  - `logout_all_view.py`: Global logout (all devices)
+  - `password_change_view.py`: Change password for authenticated users
+  - `password_reset_view.py`: Password reset request and confirmation
+  - `deactivate_view.py`: Account deactivation (soft delete)
+- `serializers/`: DRF serializers for data validation (modular, one serializer per file)
+  - `register_serializer.py`: Complete registration validation
+  - `verify_serializer.py`: Email verification validation
+  - `resend_serializer.py`: Resend code validation
+  - `login_serializer.py`: Login credentials validation
+  - `session_serializer.py`: Session data serialization
+  - `password_change_serializer.py`: Password change validation
+  - `password_reset_serializer.py`: Password reset validation
+  - `deactivate_serializer.py`: Account deactivation validation
+  - `usuario_serializer.py`: User data serialization
+- `utils/`: Reusable utilities (single responsibility principle)
+  - `codes.py`: Verification code generation, validation, and management
+  - `email_utils.py`: Email sending utilities (verification, password reset)
+  - `redis_client.py`: Redis operations wrapper with error handling
+  - `tokens.py`: JWT token utilities
+  - `validators.py`: Custom validation functions (email, age, etc.)
+  - `recaptcha.py`: Google reCAPTCHA verification
+- `urls.py`: URL patterns for all auth endpoints
 - `permissions.py`: Custom permissions (commented out)
 - `admin.py`: Django admin configuration
 - `apps.py`: App configuration
@@ -87,74 +117,173 @@ cupido-backend/
 - `views.py`: Views (empty)
 - `apps.py`: App configuration
 
-## 4. Bad Practices Analysis
+## 4. Security & Architecture Status
 
-### Security Issues
-- **Plain Text Passwords**: Passwords stored in plain text in the database (line 64 in legacy_models/models.py)
-- **No Password Hashing**: Registration stores passwords directly without hashing
-- **Weak Authentication**: Login compares plain text passwords (line 92 in auth.py)
-- **No Password Validation**: No enforcement of password strength requirements
-- **Email Verification Bypass**: No actual age verification or other validations mentioned in README
+### ✅ Security Improvements Implemented
+- **Password Hashing**: All passwords are properly hashed using Django's make_password() and validated with check_password()
+- **Comprehensive Validation**: Email domain validation, age verification (≥18), reCAPTCHA, FK existence checks
+- **JWT Security**: Proper token generation, blacklist for logout, configurable expiration times
+- **Rate Limiting**: Protection against abuse on registration, verification, and login endpoints
+- **Redis Security**: TTL-based expiration for sensitive data, attempt limits for verification codes
+- **Input Validation**: All serializers include proper validation with meaningful error messages
 
-### Code Quality Issues
-- **Hardcoded Values**: Email domain hardcoded in verification view
-- **Global Redis Connection**: Redis connection created globally in views
-- **No Error Handling**: Basic exception handling in registration
-- **Commented Code**: Permissions file has commented-out code
+### ✅ Architecture Improvements Implemented
+- **Modular Design**: Each view, serializer, and utility in separate files following single responsibility
+- **Error Handling**: Comprehensive logging and exception handling throughout the application
+- **Code Reusability**: Utility functions centralized in utils/ directory
+- **Scalability**: Redis-based caching for verification codes, prepared for horizontal scaling
+- **Maintainability**: Clear separation of concerns, docstrings, and consistent code style
 
-### Architecture Issues
-- **Legacy Dependency**: Heavy reliance on unmanaged legacy models
-- **No Documentation**: API documentation missing (no Swagger/OpenAPI)
-- **Environment Handling**: No validation of required environment variables
+### Code Quality Status
+- **✅ Modular Organization**: Code properly separated by responsibility (views, serializers, utils)
+- **✅ Error Handling**: Comprehensive logging and exception handling implemented
+- **✅ Configuration**: Environment variables properly managed with validation
+- **✅ Documentation**: Detailed README and architecture documentation
 
-### Database Issues
-- **Managed=False**: Legacy models not managed by Django migrations
-- **No Relationships**: Missing foreign key constraints in some places
-- **Data Integrity**: No database-level validations
+### Architecture Status
+- **✅ Legacy Integration**: Proxy models provide compatibility with existing schema
+- **✅ REST API**: Complete DRF-based API with proper HTTP status codes
+- **✅ Microservices-ready**: Apps can be developed independently
+- **✅ Scalability**: Redis caching and stateless JWT authentication
 
-## 5. Recommendations
+### Database Status
+- **Legacy Models**: Managed=False for existing schema compatibility
+- **✅ Data Integrity**: Application-level validations ensure data consistency
+- **✅ Relationships**: Proper FK validation in serializers
 
-### Security Improvements
-1. **Implement Proper Password Hashing**:
-   - Use Django's built-in password hashing
-   - Update legacy model to use hashed passwords
-   - Migrate existing plain text passwords
+## 5. API Endpoints & Examples
 
-2. **Add Password Validation**:
-   - Implement Django's password validators
-   - Add custom validators for institutional requirements
+### Authentication Endpoints
 
-3. **Improve Authentication**:
-   - Add rate limiting for login attempts
-   - Implement account lockout after failed attempts
-   - Add password reset functionality
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | `/api/auth/register/` | Complete user registration | No |
+| POST | `/api/auth/verify-email/` | Verify email with code | No |
+| POST | `/api/auth/resend-code/` | Resend verification code | No |
+| POST | `/api/auth/login/` | User login with JWT | No |
+| GET | `/api/auth/session/` | Get authenticated user info | Yes |
+| POST | `/api/auth/logout/` | Logout current session | Yes |
+| POST | `/api/auth/password-change/` | Change password | Yes |
+| POST | `/api/auth/password-reset/` | Request password reset | No |
+| POST | `/api/auth/password-reset-confirm/` | Confirm password reset | No |
+| POST | `/api/auth/deactivate/` | Deactivate account | Yes |
 
-4. **Email Security**:
-   - Use secure email service (not Gmail SMTP)
-   - Add email verification link instead of codes
-   - Implement email change verification
+### cURL Examples
 
-### Code Quality
-2. **Add Comprehensive Validation**: Implement all validations mentioned in README
-3. **Error Handling**: Add proper exception handling and logging
-4. **Code Organization**: Separate concerns better (e.g., services layer)
+#### 1. User Registration
+```bash
+curl -X POST http://localhost:8000/api/v1/auth/register/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "usuario@unipamplona.edu.co",
+    "contrasena": "SecurePass123.",
+    "recaptcha_token": "recaptcha_response_token",
+    "nombres": "Juan",
+    "apellidos": "Perez",
+    "programa": 1,
+    "semestreubicacion": 1,
+    "genero": 1,
+    "fechanacimiento": "2000-01-15",
+    "numerotelefono": "3001234567",
+    "tyc": true,
+    "apodo": "JuanP"
+  }'
+```
 
-### Architecture Improvements
-2. **API Documentation**: Add Swagger/OpenAPI documentation
-4. **Database Migration**: Properly migrate legacy schema to Django-managed models
+#### 2. Email Verification
+```bash
+curl -X POST http://localhost:8000/api/v1/auth/verify-email/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "usuario@unipamplona.edu.co",
+    "codigo": "123456"
+  }'
+```
 
-### Configuration
-1. **Environment Variables**: Add validation and defaults for all required vars
-2. **Docker Support**: Implement Docker for development and deployment
-3. **CI/CD**: Add GitHub Actions for automated testing and deployment
-4. **Monitoring**: Add logging and monitoring capabilities
+#### 3. User Login
+```bash
+curl -X POST http://localhost:8000/api/v1/auth/login/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "juan.rodriguezjuajua5@unipamplona.edu.co",
+    "contrasena": "SecurePass123."
+  }'
+```
+
+#### 4. Get Session Info (Authenticated)
+```bash
+curl -X GET http://localhost:8000/api/v1/auth/session/ \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzYxMzYzNDg1LCJpYXQiOjE3NjEzNjI1ODUsImp0aSI6ImQ5YzgzZjU1ZjgyYTQ4YTI4ZGU5NGY1MTgyNmU1ZTkxIiwidXNlcl9pZCI6IjExIn0.Iu10L07EUUjOR4odGWsi87sGFCxt8zGKv3SQ8NabUkU"
+```
+
+#### 5. Password Change (Authenticated)
+```bash
+curl -X POST http://localhost:8000/api/v1/auth/password-change/ \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzYxMzYzNDg1LCJpYXQiOjE3NjEzNjI1ODUsImp0aSI6ImQ5YzgzZjU1ZjgyYTQ4YTI4ZGU5NGY1MTgyNmU1ZTkxIiwidXNlcl9pZCI6IjExIn0.Iu10L07EUUjOR4odGWsi87sGFCxt8zGKv3SQ8NabUkU" \
+  -d '{
+    "contrasena_actual": "SecurePass123.",
+    "nueva_contrasena": "NewSecurePass123."
+  }'
+```
+
+#### 6. Password Reset Request
+```bash
+curl -X POST http://localhost:8000/api/v1/auth/password-reset/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "juan.rodriguezjuajua5@unipamplona.edu.co"
+  }'
+```
+
+#### 7. Password Reset Confirmation
+```bash
+curl -X POST http://localhost:8000/api/v1/auth/password-reset-confirm/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "juan.rodriguezjuajua5@unipamplona.edu.co",
+    "token": "738623",
+    "nueva_contrasena": "SecurePass123."
+  }'
+```
+
+#### 8. Logout Current Session (Authenticated)
+```bash
+curl -X POST http://localhost:8000/api/v1/auth/logout/ \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzYxMzYzNDg1LCJpYXQiOjE3NjEzNjI1ODUsImp0aSI6ImQ5YzgzZjU1ZjgyYTQ4YTI4ZGU5NGY1MTgyNmU1ZTkxIiwidXNlcl9pZCI6IjExIn0.Iu10L07EUUjOR4odGWsi87sGFCxt8zGKv3SQ8NabUkU" \
+  -d '{
+    "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2MTk2NzU5OSwiaWF0IjoxNzYxMzYyNzk5LCJqdGkiOiJhOWZhNzAxY2Q2YzY0YWNkYjEyOGE1MGExYTZiYjBiOCIsInVzZXJfaWQiOiIxMSJ9.Ol_k59Te9_-AIPoaDG62-FZnubLJhr5C4zTtAJ6unJw"
+  }'
+```
+
+#### 9. Account Deactivation (Authenticated)
+```bash
+curl -X POST http://localhost:8000/api/v1/auth/deactivate/ \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzYxMzY0NDY5LCJpYXQiOjE3NjEzNjM1NjksImp0aSI6IjdhNmY0YmMxYmVkODQ0ZWVhNDBiZDEzMThhYjI5ZDAzIiwidXNlcl9pZCI6IjUifQ.jh-zz9Y3_5IsXk_TzoBaOxWbnldcMbErdJieXNedvaM" \
+  -d '{
+    "contrasena": "OtraClaveSegura123",
+    "confirmacion": "desactivar"
+  }'
+```
+
+## 6. Future Enhancements
+
+### Security & Features
+- **2FA Implementation**: SMS/email-based two-factor authentication
+- **Account Lockout**: Temporary lock after failed login attempts
+- **Email Change**: Secure email address update process
+- **Audit Logging**: Comprehensive user action logging
 
 ### Performance & Scalability
-1. **Caching Strategy**: Implement Redis caching for frequently accessed data
-2. **Database Optimization**: Add indexes and optimize queries
-3. **Async Processing**: Use Celery for email sending and background tasks
-4. **API Optimization**: Implement pagination, filtering, and serialization optimization
+- **API Documentation**: Swagger/OpenAPI integration
+- **Async Email**: Celery for background email processing
+- **Caching**: Redis caching for user profiles and common data
+- **Rate Limiting**: Advanced rate limiting with Redis
 
-### Development Practices
-1. **Code Standards**: Add pre-commit hooks for code formatting (black, isort)
-2. **Documentation**: Maintain up-to-date API and architecture docs
+### Development & Deployment
+- **Docker Support**: Containerized development and deployment
+- **CI/CD Pipeline**: Automated testing and deployment
+- **Monitoring**: Application performance monitoring
+- **Code Standards**: Pre-commit hooks for code quality

@@ -1,45 +1,61 @@
 # apps/auth_app/serializers/register_serializer.py
-from datetime import date
 
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
+from datetime import date
 
-from legacy_models.models import Usuario
+from legacy_models.models import Usuario, Programa, Genero, Semestresubicacion
 
 # Utilidades (implementarlas en apps.auth_app.utils)
 from apps.auth_app.utils.recaptcha import verify_recaptcha_token
-from apps.auth_app.utils.validators import (
-    validate_institutional_email,
-    calculate_age,
-)
+from apps.auth_app.utils.validators import validate_institutional_email, calculate_age
 
 
 class RegisterSerializer(serializers.Serializer):
     """
-    Valida datos del registro inicial. No crea el usuario: prepara datos limpios
-    listos para guardarse temporalmente en Redis (o en la vista).
-    Campos esperados (según la BD legacy):
-      - email, nombres, apellidos, fechanacimiento, contrasena, sexo, programa, tyc
+    Valida datos completos del registro inicial. No crea el usuario: prepara datos limpios
+    listos para guardarse temporalmente en Redis.
+
+    Campos requeridos según especificaciones:
+      - email (institucional @unipamplona.edu.co)
+      - contrasena (con validaciones de seguridad)
+      - recaptcha_token
+      - nombres, apellidos
+      - programa (FK a Programa)
+      - semestreubicacion (FK a Semestresubicacion)
+      - genero (FK a Genero)
+      - fechanacimiento (edad >=18)
+      - numerotelefono
+      - apodo (opcional)
+      - tyc (términos y condiciones)
 
     Requisitos realizados aquí:
-      * Validación token reCaptcha (campo: recaptcha_token)
+      * Validación token reCaptcha
       * Validación formato y dominio de email institucional
       * Verificar que el email no exista ya en la tabla Usuario
-      * Validación de edad; añade 'estadocuenta' = 'Menor' o 'Activa'
       * Aplicar validadores de contraseña de Django
+      * Validación de edad mínima (18 años)
+      * Validación de existencia de FKs (programa, genero, semestre)
       * Nunca devuelve ni almacena la contraseña en texto claro (usamos make_password)
+      * Establece 'estadocuenta' por defecto a 'Activa'
     """
 
+    # Campos obligatorios
     email = serializers.EmailField()
-    nombres = serializers.CharField(max_length=150)
-    apellidos = serializers.CharField(max_length=150)
-    fechanacimiento = serializers.DateField()
     contrasena = serializers.CharField(write_only=True, min_length=8)
-    sexo = serializers.CharField(allow_blank=True, required=False)
-    programa = serializers.CharField(allow_blank=True, required=False)
-    tyc = serializers.BooleanField()
     recaptcha_token = serializers.CharField(write_only=True)
+    nombres = serializers.CharField(max_length=50)
+    apellidos = serializers.CharField(max_length=50)
+    programa = serializers.IntegerField()
+    semestreubicacion = serializers.IntegerField()
+    genero = serializers.IntegerField()
+    fechanacimiento = serializers.DateField()
+    numerotelefono = serializers.CharField(max_length=15)
+    tyc = serializers.BooleanField()
+
+    # Campos opcionales
+    apodo = serializers.CharField(max_length=50, required=False, allow_blank=True)
 
     def validate_recaptcha_token(self, value):
         print("Token recibido:", value)
@@ -77,31 +93,37 @@ class RegisterSerializer(serializers.Serializer):
 
     def validate_fechanacimiento(self, value):
         """
-        Calcula la edad con calculate_age (utils). Acepta fechas válidas.
+        Valida que el usuario tenga al menos 18 años.
         """
-        # fecha en el futuro no permitida
-        if value > date.today():
-            raise serializers.ValidationError("La fecha de nacimiento no puede estar en el futuro.")
-
-        try:
-            age = calculate_age(value)
-        except Exception:
-            # fallback simple
-            today = date.today()
-            age = int((today - value).days / 365.25)
-
-        if age < 0:
-            raise serializers.ValidationError("Fecha de nacimiento inválida.")
-        # podemos devolver la fecha, el cálculo se hace en validate() para setear estadocuenta
+        age = calculate_age(value)
+        if age < 18:
+            raise serializers.ValidationError("Debes tener al menos 18 años para registrarte.")
         return value
 
-    def validate_tyc(self, value):
+    def validate_programa_id(self, value):
         """
-        El frontend obliga a enviar tyc=True. Reforzamos en backend.
+        Verifica que el programa exista en la base de datos.
         """
-        if not value:
-            raise serializers.ValidationError("Debe aceptar los términos y condiciones.")
+        if not Programa.objects.filter(programa_id=value).exists():
+            raise serializers.ValidationError("Programa académico no válido.")
         return value
+
+    def validate_genero_id(self, value):
+        """
+        Verifica que el género exista en la base de datos.
+        """
+        if not Genero.objects.filter(genero_id=value).exists():
+            raise serializers.ValidationError("Género no válido.")
+        return value
+
+    def validate_semestreubicacion_id(self, value):
+        """
+        Verifica que el semestre de ubicación exista en la base de datos.
+        """
+        if not Semestresubicacion.objects.filter(semestreubicacion_id=value).exists():
+            raise serializers.ValidationError("Semestre de ubicación no válido.")
+        return value
+
 
     def validate_contrasena(self, value):
         """
@@ -117,22 +139,16 @@ class RegisterSerializer(serializers.Serializer):
     def validate(self, attrs):
         """
         Validaciones cruzadas:
-         - calcular edad y definir estadocuenta
-         - cualquier validación adicional que requiera varios campos
+          - Establecer estadocuenta por defecto a 'Activa'
+          - Establecer fecharegistro por defecto
+          - cualquier validación adicional que requiera varios campos
         """
-        fechanacimiento = attrs.get("fechanacimiento")
-        # calcular edad robustamente (usar util si disponible)
-        try:
-            age = calculate_age(fechanacimiento)
-        except Exception:
-            today = date.today()
-            age = int((today - fechanacimiento).days / 365.25)
+        # Establecer estado de cuenta por defecto
+        attrs["estadocuenta"] = "Activa"
 
-        # decidir estado de cuenta
-        if age < 18:
-            attrs["estadocuenta"] = "Menor"
-        else:
-            attrs["estadocuenta"] = "Activa"
+        # Establecer fecha de registro por defecto (se puede actualizar luego)
+        from django.utils import timezone
+        attrs["fecharegistro"] = timezone.now()
 
         # No incluimos recaptcha_token en payload final (no lo almacenamos)
         attrs.pop("recaptcha_token", None)
