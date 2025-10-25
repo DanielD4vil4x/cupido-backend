@@ -1,0 +1,176 @@
+# apps/auth_app/serializers/register_serializer.py
+
+from django.contrib.auth.hashers import make_password
+from django.contrib.auth.password_validation import validate_password
+from rest_framework import serializers
+from datetime import date
+
+from legacy_models.models import Usuario, Programa, Genero, Semestresubicacion
+
+# Utilidades (implementarlas en apps.auth_app.utils)
+from apps.auth_app.utils.recaptcha import verify_recaptcha_token
+from apps.auth_app.utils.validators import validate_institutional_email, calculate_age
+
+
+class RegisterSerializer(serializers.Serializer):
+    """
+    Valida datos completos del registro inicial. No crea el usuario: prepara datos limpios
+    listos para guardarse temporalmente en Redis.
+
+    Campos requeridos según especificaciones:
+      - email (institucional @unipamplona.edu.co)
+      - contrasena (con validaciones de seguridad)
+      - recaptcha_token
+      - nombres, apellidos
+      - programa (FK a Programa)
+      - semestreubicacion (FK a Semestresubicacion)
+      - genero (FK a Genero)
+      - fechanacimiento (edad >=18)
+      - numerotelefono
+      - apodo (opcional)
+      - tyc (términos y condiciones)
+
+    Requisitos realizados aquí:
+      * Validación token reCaptcha
+      * Validación formato y dominio de email institucional
+      * Verificar que el email no exista ya en la tabla Usuario
+      * Aplicar validadores de contraseña de Django
+      * Validación de edad mínima (18 años)
+      * Validación de existencia de FKs (programa, genero, semestre)
+      * Nunca devuelve ni almacena la contraseña en texto claro (usamos make_password)
+      * Establece 'estadocuenta' por defecto a 'Activa'
+    """
+
+    # Campos obligatorios
+    email = serializers.EmailField()
+    contrasena = serializers.CharField(write_only=True, min_length=8)
+    recaptcha_token = serializers.CharField(write_only=True)
+    nombres = serializers.CharField(max_length=50)
+    apellidos = serializers.CharField(max_length=50)
+    programa = serializers.IntegerField()
+    semestreubicacion = serializers.IntegerField()
+    genero = serializers.IntegerField()
+    fechanacimiento = serializers.DateField()
+    numerotelefono = serializers.CharField(max_length=15)
+    tyc = serializers.BooleanField()
+
+    # Campos opcionales
+    apodo = serializers.CharField(max_length=50, required=False, allow_blank=True)
+
+    def validate_recaptcha_token(self, value):
+        print("Token recibido:", value)
+        try:
+            success, details = verify_recaptcha_token(value)
+            print("Respuesta de Google:", details)
+        except Exception as e:
+            raise serializers.ValidationError(f"Error validando reCAPTCHA: {str(e)}")
+
+        if not success:
+            error_codes = details.get("error-codes", [])
+            raise serializers.ValidationError(f"reCAPTCHA inválido. Códigos: {error_codes}")
+    
+        return value
+
+    def validate_email(self, value):
+        """
+        Verifica dominio institucional y unicidad en legacy Usuario.
+        Reutiliza validate_institutional_email (utils) para chequear formato/domain.
+        """
+        # validar dominio/estructura institucional
+        try:
+            validate_institutional_email(value)
+        except serializers.ValidationError:
+            raise
+        except Exception:
+            # si la util no existe o falla, caer en fallback simple
+            if not value.endswith("@unipamplona.edu.co"):
+                raise serializers.ValidationError("Debe usar correo institucional @unipamplona.edu.co.")
+
+        # verificar unicidad en legacy table
+        if Usuario.objects.filter(email=value).exists():
+            raise serializers.ValidationError("El correo ya se encuentra registrado.")
+        return value
+
+    def validate_fechanacimiento(self, value):
+        """
+        Valida que el usuario tenga al menos 18 años.
+        """
+        age = calculate_age(value)
+        if age < 18:
+            raise serializers.ValidationError("Debes tener al menos 18 años para registrarte.")
+        return value
+
+    def validate_programa_id(self, value):
+        """
+        Verifica que el programa exista en la base de datos.
+        """
+        if not Programa.objects.filter(programa_id=value).exists():
+            raise serializers.ValidationError("Programa académico no válido.")
+        return value
+
+    def validate_genero_id(self, value):
+        """
+        Verifica que el género exista en la base de datos.
+        """
+        if not Genero.objects.filter(genero_id=value).exists():
+            raise serializers.ValidationError("Género no válido.")
+        return value
+
+    def validate_semestreubicacion_id(self, value):
+        """
+        Verifica que el semestre de ubicación exista en la base de datos.
+        """
+        if not Semestresubicacion.objects.filter(semestreubicacion_id=value).exists():
+            raise serializers.ValidationError("Semestre de ubicación no válido.")
+        return value
+
+
+    def validate_contrasena(self, value):
+        """
+        Aplicar validadores de contraseña de Django (longitud, similaridad, etc.)
+        """
+        try:
+            validate_password(value)
+        except serializers.ValidationError:
+            # Re-lanzar en formato de serializer
+            raise
+        return value
+
+    def validate(self, attrs):
+        """
+        Validaciones cruzadas:
+          - Establecer estadocuenta por defecto a 'Activa'
+          - Establecer fecharegistro por defecto
+          - cualquier validación adicional que requiera varios campos
+        """
+        # Establecer estado de cuenta por defecto
+        attrs["estadocuenta"] = "Activa"
+
+        # Establecer fecha de registro por defecto (se puede actualizar luego)
+        from django.utils import timezone
+        attrs["fecharegistro"] = timezone.now()
+
+        # No incluimos recaptcha_token en payload final (no lo almacenamos)
+        attrs.pop("recaptcha_token", None)
+
+        return attrs
+
+    def to_redis_payload(self):
+        """
+        Prepara un dict con los datos que se deben guardar temporalmente en Redis.
+        Important: no incluye campos sensibles en texto plano.
+        - contrasena: se devuelve hasheada con make_password
+        - incluye un campo meta para saber que viene del registro
+        """
+        if not hasattr(self, "validated_data"):
+            raise RuntimeError("Debe llamar is_valid() antes de to_redis_payload().")
+
+        data = dict(self.validated_data)  # copia segura
+        raw_pass = data.pop("contrasena", None)
+        # Nunca guardar raw password en Redis: hashearla
+        if raw_pass:
+            data["password"] = make_password(raw_pass)  # Cambiar a "password" para compatibilidad con AbstractUser
+        # añadir un flag temporal opcional
+        data["_from_registration"] = True
+        return data
+

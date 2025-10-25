@@ -1,24 +1,42 @@
-"""
-URL configuration for config project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
 from django.contrib import admin
 from django.urls import path, include
+from django.http import JsonResponse
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+
+
+API_TITLE = "Cupido API"
+API_VERSION = "v1"
+
+def root_view(request):
+    return JsonResponse({
+        "message": "Bienvenido a la API de Cupido ❤️",
+        "version": API_VERSION,
+        "endpoints": {
+            "auth": "/api/v1/auth/",
+            "profile": "/api/v1/profile/",
+            "match": "/api/v1/match/",
+            "reports": "/api/v1/reports/",
+            "chat": "/api/v1/chat/",
+        }
+    })
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', include('apps.auth_app.urls')),
+    # Django admin
+    path("admin/", admin.site.urls),
+
+    # API base (root)
+    path("", root_view, name="api-root"),
+
+    # Versión principal de la API
+    path("api/v1/auth/", include(("apps.auth_app.urls", "auth_app"), namespace="auth")),
+    path("api/v1/profile/", include(("apps.profile_app.urls", "profile_app"), namespace="profile")),
+    path("api/v1/match/", include(("apps.match_app.urls", "match_app"), namespace="match")),
+    path("api/v1/reports/", include(("apps.reports_app.urls", "reports_app"), namespace="reports")),
+    path("api/v1/chat/", include(("apps.chat_app.urls", "chat_app"), namespace="chat")),
+
+    #Documentación de API
+    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+    path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema")),
 ]
+
 

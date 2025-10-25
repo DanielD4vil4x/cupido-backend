@@ -20,8 +20,8 @@ Ramas de Desarrollo de Features Individuales (ej. feature/auth, feature/swipe)
 git clone https://github.com/cUPido-App/cupido-backend.git
 cd cupido-backend
 python -m venv venv
-source venv/bin/activate
+source venv/Scripts/activate
 pip install -r requirements.txt
 
-#Pendiente la configuracion de base de datos local y las migraciones. 
+#Pendiente instalacion de Docker para desarrollo. 
 

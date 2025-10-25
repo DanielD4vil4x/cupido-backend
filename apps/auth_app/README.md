@@ -40,7 +40,7 @@ El proceso asegura la validez, integridad y seguridad de la información suminis
 
   - Solicita la aceptación explícita de los *Términos y Condiciones* y la *Política de Privacidad* antes del registro.
 
-  - Crea un registro temporal en la base de datos encriptando la contraseña antes de su almacenamiento.
+  - Crea un registro temporal en la base de datos encriptando la contraseña antes de su almacenamiento. Esto esta en revision
 
   - Envía un correo de verificación con enlace o código único para confirmar la propiedad del email.
 
@@ -166,3 +166,31 @@ El proceso incluye validaciones, políticas de seguridad, doble factor de autent
 
 Este módulo garantiza la **autenticación segura, rápida y confiable** de los usuarios en el sistema.  
 Su objetivo es proteger la información personal, prevenir accesos no autorizados y mantener la integridad del entorno digital de *cupido-backend*.
+
+# auth_app
+
+Módulo de autenticación del proyecto **cUPido**.
+
+### Funcionalidades
+- **Registro completo**: Validaciones de email institucional, edad ≥18, reCAPTCHA, FKs existentes
+- **Verificación por código**: Redis + email con TTL y límites de intentos
+- **Login con JWT**: SimpleJWT con blacklist para logout seguro
+- **Gestión de contraseña**: Cambio y recuperación con tokens seguros
+- **Desactivación de cuenta**: Soft delete con confirmación
+- **Sesiones múltiples**: Logout individual y global
+- **Rate limiting**: Protección contra abuso en endpoints críticos
+
+### Endpoints
+| Método | Ruta | Descripción |
+|--------|------|--------------|
+| POST | `/api/auth/register/` | Registra nuevo usuario con validaciones completas |
+| POST | `/api/auth/verify-email/` | Verifica email con código y crea usuario |
+| POST | `/api/auth/resend-code/` | Reenvía código de verificación |
+| POST | `/api/auth/login/` | Autentica y devuelve tokens JWT |
+| GET | `/api/auth/session/` | Devuelve info del usuario autenticado |
+| POST | `/api/auth/logout/` | Cierra sesión actual |
+| POST | `/api/auth/logout-all/` | Cierra todas las sesiones |
+| POST | `/api/auth/password-change/` | Cambia contraseña (autenticado) |
+| POST | `/api/auth/password-reset/` | Solicita recuperación de contraseña |
+| POST | `/api/auth/password-reset-confirm/` | Confirma recuperación con token |
+| POST | `/api/auth/deactivate/` | Desactiva cuenta de usuario |
