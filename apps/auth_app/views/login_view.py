@@ -29,15 +29,9 @@ class LoginView(APIView):
         serializer.is_valid(raise_exception=True)
 
         user = serializer.validated_data["user"]
+        estadocuenta = serializer.validated_data["estadocuenta"]
         logger.debug(f"Tipo de user recibido: {type(user)}")
-
-        # Verificar estado de cuenta antes de continuar
-        if getattr(user, "estadocuenta", None) == "Menor":
-            logger.warning(f"🚫 Intento de login bloqueado para menor de edad: {user.email}")
-            return Response(
-                {"error": "El acceso no está permitido para menores de edad."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
+        logger.debug(f"Estado de cuenta: {estadocuenta}")
 
         # El usuario ya es instancia de Usuario (hereda de AbstractUser)
 
@@ -65,6 +59,7 @@ class LoginView(APIView):
             "user": UsuarioSerializer(user).data,
             "access": tokens["access"],
             "refresh": tokens["refresh"],
+            "estadocuenta": estadocuenta,
         }
 
         logger.info(f"✅ Login exitoso para {user.email}")
