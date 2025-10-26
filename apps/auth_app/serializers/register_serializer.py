@@ -14,20 +14,13 @@ from apps.auth_app.utils.validators import validate_institutional_email, calcula
 
 class RegisterSerializer(serializers.Serializer):
     """
-    Valida datos completos del registro inicial. No crea el usuario: prepara datos limpios
+    Valida datos mínimos del registro inicial. No crea el usuario: prepara datos limpios
     listos para guardarse temporalmente en Redis.
 
     Campos requeridos según especificaciones:
       - email (institucional @unipamplona.edu.co)
       - contrasena (con validaciones de seguridad)
       - recaptcha_token
-      - nombres, apellidos
-      - programa (FK a Programa)
-      - semestreubicacion (FK a Semestresubicacion)
-      - genero (FK a Genero)
-      - fechanacimiento (edad >=18)
-      - numerotelefono
-      - apodo (opcional)
       - tyc (términos y condiciones)
 
     Requisitos realizados aquí:
@@ -35,27 +28,15 @@ class RegisterSerializer(serializers.Serializer):
       * Validación formato y dominio de email institucional
       * Verificar que el email no exista ya en la tabla Usuario
       * Aplicar validadores de contraseña de Django
-      * Validación de edad mínima (18 años)
-      * Validación de existencia de FKs (programa, genero, semestre)
       * Nunca devuelve ni almacena la contraseña en texto claro (usamos make_password)
-      * Establece 'estadocuenta' por defecto a 'Activa'
+      * Establece 'estadocuenta' por defecto a 'incompleta'
     """
 
     # Campos obligatorios
     email = serializers.EmailField()
     contrasena = serializers.CharField(write_only=True, min_length=8)
     recaptcha_token = serializers.CharField(write_only=True)
-    nombres = serializers.CharField(max_length=50)
-    apellidos = serializers.CharField(max_length=50)
-    programa = serializers.IntegerField()
-    semestreubicacion = serializers.IntegerField()
-    genero = serializers.IntegerField()
-    fechanacimiento = serializers.DateField()
-    numerotelefono = serializers.CharField(max_length=15)
     tyc = serializers.BooleanField()
-
-    # Campos opcionales
-    apodo = serializers.CharField(max_length=50, required=False, allow_blank=True)
 
     def validate_recaptcha_token(self, value):
         print("Token recibido:", value)
@@ -91,38 +72,6 @@ class RegisterSerializer(serializers.Serializer):
             raise serializers.ValidationError("El correo ya se encuentra registrado.")
         return value
 
-    def validate_fechanacimiento(self, value):
-        """
-        Valida que el usuario tenga al menos 18 años.
-        """
-        age = calculate_age(value)
-        if age < 18:
-            raise serializers.ValidationError("Debes tener al menos 18 años para registrarte.")
-        return value
-
-    def validate_programa_id(self, value):
-        """
-        Verifica que el programa exista en la base de datos.
-        """
-        if not Programa.objects.filter(programa_id=value).exists():
-            raise serializers.ValidationError("Programa académico no válido.")
-        return value
-
-    def validate_genero_id(self, value):
-        """
-        Verifica que el género exista en la base de datos.
-        """
-        if not Genero.objects.filter(genero_id=value).exists():
-            raise serializers.ValidationError("Género no válido.")
-        return value
-
-    def validate_semestreubicacion_id(self, value):
-        """
-        Verifica que el semestre de ubicación exista en la base de datos.
-        """
-        if not Semestresubicacion.objects.filter(semestreubicacion_id=value).exists():
-            raise serializers.ValidationError("Semestre de ubicación no válido.")
-        return value
 
 
     def validate_contrasena(self, value):
@@ -139,12 +88,12 @@ class RegisterSerializer(serializers.Serializer):
     def validate(self, attrs):
         """
         Validaciones cruzadas:
-          - Establecer estadocuenta por defecto a 'Activa'
+          - Establecer estadocuenta por defecto a 'incompleta'
           - Establecer fecharegistro por defecto
           - cualquier validación adicional que requiera varios campos
         """
         # Establecer estado de cuenta por defecto
-        attrs["estadocuenta"] = "Activa"
+        attrs["estadocuenta"] = "incompleta"
 
         # Establecer fecha de registro por defecto (se puede actualizar luego)
         from django.utils import timezone
