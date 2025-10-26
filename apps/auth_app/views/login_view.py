@@ -4,6 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny
+from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
 
 from apps.auth_app.serializers.login_serializer import LoginSerializer
 from apps.auth_app.serializers.usuario_serializer import UsuarioSerializer
@@ -36,6 +37,17 @@ class LoginView(APIView):
         # El usuario ya es instancia de Usuario (hereda de AbstractUser)
 
         logger.info(f"✅ Usuario validado correctamente: {user.email} (ID {user.usuario_id})")
+
+        # Single session: Invalidar todas las sesiones previas del usuario
+        try:
+            previous_tokens = OutstandingToken.objects.filter(user=user)
+            previous_count = previous_tokens.count()
+            for token in previous_tokens:
+                BlacklistedToken.objects.get_or_create(token=token)
+            if previous_count > 0:
+                logger.info(f"🔒 Invalidadas {previous_count} sesiones previas para {user.email}")
+        except Exception as e:
+            logger.warning(f"⚠️ Error al invalidar sesiones previas para {user.email}: {e}")
 
         # Generar tokens JWT
         try:
