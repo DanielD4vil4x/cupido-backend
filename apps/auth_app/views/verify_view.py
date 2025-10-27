@@ -35,21 +35,18 @@ class VerifyEmailView(APIView):
         registration_payload = serializer.get_registration_payload()
 
         try:
-            # Crear usuario en la base de datos con datos reales del registro
+            # Crear usuario en la base de datos con datos mínimos del registro y dummies para los demás
             user = Usuario.objects.create(
-                nombres=registration_payload.get("nombres"),
-                apellidos=registration_payload.get("apellidos"),
+                nombres="Dummy",  # Valor dummy
+                apellidos="Dummy",  # Valor dummy
                 email=email,
                 password=registration_payload.get("password"),  # ya hasheada
-                apodo=registration_payload.get("apodo", ""),
-                numerotelefono=registration_payload.get("numerotelefono"),
+                apodo="",  # Valor dummy
+                numerotelefono="0000000000",  # Valor dummy
                 tyc=registration_payload.get("tyc", True),
-                estadocuenta=registration_payload.get("estadocuenta", "Activa"),
+                estadocuenta=registration_payload.get("estadocuenta", "incompleta"),
                 fecharegistro=registration_payload.get("fecharegistro"),
-                fechanacimiento=registration_payload.get("fechanacimiento"),
-                genero_id=registration_payload.get("genero_id"),
-                programa_id=registration_payload.get("programa_id"),
-                semestreubicacion_id=registration_payload.get("semestreubicacion_id"),
+                fechanacimiento="2000-01-01",  # Valor dummy
             )
         except Exception as e:
             return Response(

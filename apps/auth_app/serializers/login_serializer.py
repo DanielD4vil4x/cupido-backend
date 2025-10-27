@@ -4,17 +4,36 @@ from django.contrib.auth.hashers import check_password
 from rest_framework import serializers
 from legacy_models.models import Usuario
 
+# Utilidades (implementarlas en apps.auth_app.utils)
+from apps.auth_app.utils.recaptcha import verify_recaptcha_token
+
 
 class LoginSerializer(serializers.Serializer):
     """
     Valida credenciales de inicio de sesión.
     - Comprueba existencia del usuario.
     - Verifica la contraseña (con hash).
-    - Bloquea acceso si el usuario tiene estadocuenta = 'Menor'.
+    - Valida reCAPTCHA token.
+    - Verifica estado de cuenta: permite "activa" e "incompleta", bloquea "inactiva" y "reportada".
     """
 
     email = serializers.EmailField()
     contrasena = serializers.CharField(write_only=True)
+    recaptcha_token = serializers.CharField(write_only=True)
+
+    def validate_recaptcha_token(self, value):
+        print("Token recibido en login:", value)
+        try:
+            success, details = verify_recaptcha_token(value)
+            print("Respuesta de Google en login:", details)
+        except Exception as e:
+            raise serializers.ValidationError(f"Error validando reCAPTCHA: {str(e)}")
+
+        if not success:
+            error_codes = details.get("error-codes", [])
+            raise serializers.ValidationError(f"reCAPTCHA inválido. Códigos: {error_codes}")
+
+        return value
 
     def validate(self, attrs):
         email = attrs.get("email")
@@ -26,10 +45,15 @@ class LoginSerializer(serializers.Serializer):
         except Usuario.DoesNotExist:
             raise serializers.ValidationError({"email": "Usuario no encontrado."})
 
-        # 2️⃣ Verificar estado de cuenta (mayoría de edad)
-        if user.estadocuenta == "Menor":
+        # 2️⃣ Verificar estado de cuenta
+        estadocuenta = user.estadocuenta
+        if estadocuenta in ["inactiva", "reportada"]:
             raise serializers.ValidationError(
-                {"email": "No se permite el acceso a menores de edad."}
+                {"email": f"Cuenta {estadocuenta}. No se permite el acceso."}
+            )
+        elif estadocuenta not in ["activa", "incompleta", "Menor"]:
+            raise serializers.ValidationError(
+                {"email": "Estado de cuenta inválido."}
             )
 
         # 3️⃣ Validar contraseña (verificación segura con hash)
@@ -38,4 +62,5 @@ class LoginSerializer(serializers.Serializer):
 
         # 4️⃣ Si todo es correcto, adjuntar usuario validado
         attrs["user"] = user
+        attrs["estadocuenta"] = estadocuenta  # Para usar en la vista
         return attrs

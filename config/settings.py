@@ -37,12 +37,13 @@ USE_TZ = True
 # CORS Configuration
 # -------------------------
 if DEBUG:
-    CORS_ALLOWED_ORIGINS = ["http://localhost:5173"]
+    CORS_ALLOWED_ORIGINS = ["http://localhost:8080"]
 else:
     cors_env = os.getenv("CORS_ALLOWED_ORIGINS", "")
     CORS_ALLOWED_ORIGINS = [o for o in cors_env.split(",") if o] if cors_env else []
 
-CORS_ALLOW_CREDENTIALS = os.getenv("CORS_ALLOW_CREDENTIALS", "False").lower() == "true"
+CORS_ALLOW_CREDENTIALS = True
+#os.getenv("CORS_ALLOW_CREDENTIALS", "False").lower() == "true"
 
 # -------------------------
 # Applications
@@ -111,15 +112,26 @@ WSGI_APPLICATION = "config.wsgi.application"
 # Database
 # -------------------------
 DATABASES = {
-    "default": dj_database_url.config(
-        default=os.getenv(
-            "DATABASE_URL",
-            "postgresql://postgres:postgres@localhost:5432/cupido"
-        ),
-        conn_max_age=int(os.getenv("DB_CONN_MAX_AGE", 600)),
-        ssl_require=os.getenv("DB_SSL_REQUIRE", "False").lower() == "true" and not DEBUG,
-    )
-}
+     "default": dj_database_url.config(
+         default=os.getenv(
+             "DATABASE_URL",
+             "postgresql://postgres:postgres@localhost:5432/cupido"
+         ),
+         conn_max_age=int(os.getenv("DB_CONN_MAX_AGE", 600)),
+         ssl_require=os.getenv("DB_SSL_REQUIRE", "False").lower() == "true" and not DEBUG,
+     )
+ }
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'CUPIDO',
+#         'USER': 'LAGO',
+#         'PASSWORD': 'Cupido20252',
+#         'HOST': '190.107.20.156',
+#         'PORT': '5432',
+#     }
+# }
 
 # -------------------------
 # Redis / Cache

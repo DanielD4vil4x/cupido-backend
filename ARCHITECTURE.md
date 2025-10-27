@@ -178,15 +178,7 @@ curl -X POST http://localhost:8000/api/v1/auth/register/ \
     "email": "usuario@unipamplona.edu.co",
     "contrasena": "SecurePass123.",
     "recaptcha_token": "recaptcha_response_token",
-    "nombres": "Juan",
-    "apellidos": "Perez",
-    "programa": 1,
-    "semestreubicacion": 1,
-    "genero": 1,
-    "fechanacimiento": "2000-01-15",
-    "numerotelefono": "3001234567",
-    "tyc": true,
-    "apodo": "JuanP"
+    "tyc": true
   }'
 ```
 
@@ -206,7 +198,8 @@ curl -X POST http://localhost:8000/api/v1/auth/login/ \
   -H "Content-Type: application/json" \
   -d '{
     "email": "juan.rodriguezjuajua5@unipamplona.edu.co",
-    "contrasena": "SecurePass123."
+    "contrasena": "SecurePass123.",
+    "recaptcha_token" : "recaptcha_response_token"
   }'
 ```
 
