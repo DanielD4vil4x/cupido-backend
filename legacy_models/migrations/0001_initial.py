@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'db_table': 'genero',
-                'managed': False,
+                #'managed': False,
             },
         ),
         migrations.CreateModel(
@@ -32,7 +32,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'db_table': 'orientacion',
-                'managed': False,
+                #'managed': False,
             },
         ),
         migrations.CreateModel(
@@ -44,7 +44,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'db_table': 'programa',
-                'managed': False,
+                #'managed': False,
             },
         ),
         migrations.CreateModel(
@@ -55,7 +55,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'db_table': 'semestresubicacion',
-                'managed': False,
+                #'managed': False,
             },
         ),
         migrations.CreateModel(
@@ -67,7 +67,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'db_table': 'ubicacion',
-                'managed': False,
+                #'managed': False,
             },
         ),
         migrations.CreateModel(
@@ -93,7 +93,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'db_table': 'usuario',
-                'managed': False,
+                #'managed': False,
             },
         ),
         migrations.CreateModel(
@@ -107,7 +107,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'db_table': 'verificacion',
-                'managed': False,
+                #'managed': False,
             },
         ),
     ]

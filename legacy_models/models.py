@@ -8,7 +8,7 @@ class Genero(models.Model):
     fecha_creacion = models.DateTimeField(blank=True, null=True)
 
     class Meta:
-        managed = False
+        #managed = False
         db_table = 'genero'
 
 
@@ -18,7 +18,7 @@ class Orientacion(models.Model):
     fecha_creacion = models.DateTimeField(blank=True, null=True)
 
     class Meta:
-        managed = False
+        #managed = False
         db_table = 'orientacion'
 
 
@@ -28,7 +28,7 @@ class Programa(models.Model):
     fecha_creacion = models.DateTimeField(blank=True, null=True)
 
     class Meta:
-        managed = False
+        #managed = False
         db_table = 'programa'
 
 
@@ -37,7 +37,7 @@ class Semestresubicacion(models.Model):
     descripcion = models.CharField(max_length=50)
 
     class Meta:
-        managed = False
+        #managed = False
         db_table = 'semestresubicacion'
 
 
@@ -47,7 +47,7 @@ class Ubicacion(models.Model):
     fecha_creacion = models.DateTimeField(blank=True, null=True)
 
     class Meta:
-        managed = False
+        #managed = False
         db_table = 'ubicacion'
 
 
@@ -82,7 +82,7 @@ class Usuario(AbstractUser):
     REQUIRED_FIELDS = ['nombres', 'apellidos']  # Campos requeridos además del USERNAME_FIELD
 
     class Meta:
-        managed = False
+        #managed = False
         db_table = 'usuario'
 
     @property
@@ -129,5 +129,5 @@ class Verificacion(models.Model):
     usado = models.BooleanField(blank=True, null=True)
 
     class Meta:
-        managed = False
+        #managed = False
         db_table = 'verificacion'
