@@ -4,8 +4,7 @@ from rest_framework import status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from apps.auth_app.serializers.user_get_serializer import serialize_user_profile
-from apps.auth_app.utils.profile import compute_account_state
+from apps.auth_app.utils.user_get import get_user_profile_data
 
 
 class UserGetView(APIView):
@@ -20,21 +19,6 @@ class UserGetView(APIView):
 
     def get(self, request):
         user = request.user
-        estado = compute_account_state(user)
-        
-        # Mantener sincronizado con el campo persistido si difiere
-        if getattr(user, "estadocuenta", None) != estado:
-            user.estadocuenta = estado
-            user.save(update_fields=["estadocuenta"])
-
-        # Serializar todos los campos del usuario
-        user_data = serialize_user_profile(user)
-        
-        payload = {
-            "estado": estado,
-            "should_complete_profile": estado == "incompleta",
-            "user": user_data,
-        }
-        
+        payload = get_user_profile_data(user)
         return Response(payload, status=status.HTTP_200_OK)
 

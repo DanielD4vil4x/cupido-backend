@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.auth_app.serializers.user_update_serializer import UserUpdateSerializer
-from apps.auth_app.utils.profile import is_profile_complete
+from apps.auth_app.utils.user_update import update_user_profile_completion_status, get_user_update_response_data
 
 
 class UserUpdateView(APIView):
@@ -26,25 +26,11 @@ class UserUpdateView(APIView):
         # Refrescar el usuario desde la BD
         user.refresh_from_db()
 
-        # Si el perfil ahora cumple mínimos, actualizar estado a 'completa'
-        if is_profile_complete(user) and user.estadocuenta != "completa":
-            user.estadocuenta = "completa"
-            user.save(update_fields=["estadocuenta"])
+        # Actualizar estado de completitud del perfil
+        update_user_profile_completion_status(user)
 
-        response = {
-            "message": "Perfil actualizado correctamente.",
-            "estado": user.estadocuenta,
-            "user": {
-                "usuario_id": user.usuario_id,
-                "nombres": user.nombres,
-                "apellidos": user.apellidos,
-                "email": user.email,
-                "genero": user.genero.genero_id if user.genero else None,
-                "genero_descripcion": user.genero.descripcion if user.genero else None,
-                "fechanacimiento": user.fechanacimiento,
-                "descripcion": user.descripcion,
-            },
-        }
+        # Generar respuesta estructurada
+        response = get_user_update_response_data(user)
         return Response(response, status=status.HTTP_200_OK)
 
 
