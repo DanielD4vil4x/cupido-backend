@@ -8,6 +8,7 @@ from apps.auth_app.views.session_view import SessionInfoView
 from apps.auth_app.views.login_view import LoginView
 from apps.auth_app.views.logout_view import LogoutView
 from apps.auth_app.views.logout_all_view import LogoutAllView
+from apps.auth_app.views.profile_update_view import ProfileUpdateView
 
 from apps.auth_app.views.password_change_view import PasswordChangeView
 from apps.auth_app.views.password_reset_view import PasswordResetRequestView, PasswordResetConfirmView
@@ -26,7 +27,7 @@ urlpatterns = [
     path("session/", SessionInfoView.as_view(), name="session"),
     path("logout/", LogoutView.as_view(), name="logout"),
     path("logout-all/", LogoutAllView.as_view(), name="logout_all"),
-
+    path("profile-update/", ProfileUpdateView.as_view(), name="profile_update"),
     # Gestión de contraseña
     path("password-change/", PasswordChangeView.as_view(), name="password_change"),
     path("password-reset/", PasswordResetRequestView.as_view(), name="password_reset_request"),
