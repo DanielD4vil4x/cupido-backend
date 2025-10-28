@@ -111,7 +111,7 @@ WSGI_APPLICATION = "config.wsgi.application"
 # -------------------------
 # Database
 # -------------------------
-DATABASES = {
+""" DATABASES = {
      "default": dj_database_url.config(
          default=os.getenv(
              "DATABASE_URL",
@@ -120,18 +120,20 @@ DATABASES = {
          conn_max_age=int(os.getenv("DB_CONN_MAX_AGE", 600)),
          ssl_require=os.getenv("DB_SSL_REQUIRE", "False").lower() == "true" and not DEBUG,
      )
- }
+ } """
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'CUPIDO',
-#         'USER': 'LAGO',
-#         'PASSWORD': 'Cupido20252',
-#         'HOST': '190.107.20.156',
-#         'PORT': '5432',
-#     }
-# }
+
+
+DATABASES = {
+     "default": dj_database_url.config(
+         default=os.getenv(
+             "DATABASE_URL",
+             "postgresql://LAGO:Cupido20252@190.107.20.156:5432/CUPIDO"
+         ),
+         conn_max_age=int(os.getenv("DB_CONN_MAX_AGE", 600)),
+         ssl_require=os.getenv("DB_SSL_REQUIRE", "False").lower() == "true" and not DEBUG,
+     )
+ }
 
 # -------------------------
 # Redis / Cache
