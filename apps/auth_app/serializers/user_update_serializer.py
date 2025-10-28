@@ -6,7 +6,7 @@ from legacy_models.models import Usuario, Genero
 from apps.auth_app.utils.validators import calculate_age
 
 
-class ProfileUpdateSerializer(serializers.ModelSerializer):
+class UserUpdateSerializer(serializers.ModelSerializer):
     """
     Valida y actualiza los datos básicos de perfil del usuario autenticado.
     Campos actualizables:
