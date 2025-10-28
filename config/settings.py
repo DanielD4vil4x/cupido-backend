@@ -125,6 +125,7 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 
 DATABASES = {
+<<<<<<< Updated upstream
      "default": dj_database_url.config(
          default=os.getenv(
              "DATABASE_URL",
@@ -134,6 +135,17 @@ DATABASES = {
          ssl_require=os.getenv("DB_SSL_REQUIRE", "False").lower() == "true" and not DEBUG,
      )
  }
+=======
+    "default": dj_database_url.config(
+        default=os.getenv(
+            "DATABASE_URL",
+            "postgresql://postgres:postgres@localhost:5432/cupido_v1"
+        ),
+        conn_max_age=int(os.getenv("DB_CONN_MAX_AGE", 600)),
+        ssl_require=os.getenv("DB_SSL_REQUIRE", "False").lower() == "true" and not DEBUG,
+    )
+}
+>>>>>>> Stashed changes
 
 # -------------------------
 # Redis / Cache
@@ -143,7 +155,9 @@ CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": REDIS_URL,
-        "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient"},
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient"
+            },
     }
 }
 
