@@ -13,6 +13,7 @@ load_dotenv()
 # Basic paths and keys
 # -------------------------
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 SECRET_KEY = os.getenv("SECRET_KEY", "insecure-default-key")
 RECAPTCHA_SECRET_KEY = os.getenv("RECAPTCHA_SECRET_KEY")
@@ -111,41 +112,12 @@ WSGI_APPLICATION = "config.wsgi.application"
 # -------------------------
 # Database
 # -------------------------
-""" DATABASES = {
-     "default": dj_database_url.config(
-         default=os.getenv(
-             "DATABASE_URL",
-             "postgresql://postgres:postgres@localhost:5432/cupido"
-         ),
-         conn_max_age=int(os.getenv("DB_CONN_MAX_AGE", 600)),
-         ssl_require=os.getenv("DB_SSL_REQUIRE", "False").lower() == "true" and not DEBUG,
-     )
- } """
-
-
-
 DATABASES = {
-<<<<<<< Updated upstream
-     "default": dj_database_url.config(
-         default=os.getenv(
-             "DATABASE_URL",
-             "postgresql://LAGO:Cupido20252@190.107.20.156:5432/CUPIDO"
-         ),
-         conn_max_age=int(os.getenv("DB_CONN_MAX_AGE", 600)),
-         ssl_require=os.getenv("DB_SSL_REQUIRE", "False").lower() == "true" and not DEBUG,
-     )
- }
-=======
     "default": dj_database_url.config(
-        default=os.getenv(
-            "DATABASE_URL",
-            "postgresql://postgres:postgres@localhost:5432/cupido_v1"
-        ),
         conn_max_age=int(os.getenv("DB_CONN_MAX_AGE", 600)),
         ssl_require=os.getenv("DB_SSL_REQUIRE", "False").lower() == "true" and not DEBUG,
     )
 }
->>>>>>> Stashed changes
 
 # -------------------------
 # Redis / Cache
