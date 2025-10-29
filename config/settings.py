@@ -44,7 +44,6 @@ else:
     CORS_ALLOWED_ORIGINS = [o for o in cors_env.split(",") if o] if cors_env else []
 
 CORS_ALLOW_CREDENTIALS = True
-#os.getenv("CORS_ALLOW_CREDENTIALS", "False").lower() == "true"
 
 # -------------------------
 # Applications
