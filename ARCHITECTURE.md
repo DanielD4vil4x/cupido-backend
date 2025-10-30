@@ -197,7 +197,7 @@ curl -X POST http://localhost:8000/api/v1/auth/verify-email/ \
 curl -X POST http://localhost:8000/api/v1/auth/login/ \
   -H "Content-Type: application/json" \
   -d '{
-    "email": "juan.rodriguezjuajua5@unipamplona.edu.co",
+    "email": "usuario@unipamplona.edu.co",
     "contrasena": "SecurePass123.",
     "recaptcha_token" : "recaptcha_response_token"
   }'
@@ -206,14 +206,14 @@ curl -X POST http://localhost:8000/api/v1/auth/login/ \
 #### 4. Get Session Info (Authenticated)
 ```bash
 curl -X GET http://localhost:8000/api/v1/auth/session/ \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzYxMzYzNDg1LCJpYXQiOjE3NjEzNjI1ODUsImp0aSI6ImQ5YzgzZjU1ZjgyYTQ4YTI4ZGU5NGY1MTgyNmU1ZTkxIiwidXNlcl9pZCI6IjExIn0.Iu10L07EUUjOR4odGWsi87sGFCxt8zGKv3SQ8NabUkU"
+  -H "Authorization: Bearer <token>"
 ```
 
 #### 5. Password Change (Authenticated)
 ```bash
 curl -X POST http://localhost:8000/api/v1/auth/password-change/ \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzYxMzYzNDg1LCJpYXQiOjE3NjEzNjI1ODUsImp0aSI6ImQ5YzgzZjU1ZjgyYTQ4YTI4ZGU5NGY1MTgyNmU1ZTkxIiwidXNlcl9pZCI6IjExIn0.Iu10L07EUUjOR4odGWsi87sGFCxt8zGKv3SQ8NabUkU" \
+  -H "Authorization: Bearer <token>" \
   -d '{
     "contrasena_actual": "SecurePass123.",
     "nueva_contrasena": "NewSecurePass123."
@@ -225,7 +225,7 @@ curl -X POST http://localhost:8000/api/v1/auth/password-change/ \
 curl -X POST http://localhost:8000/api/v1/auth/password-reset/ \
   -H "Content-Type: application/json" \
   -d '{
-    "email": "juan.rodriguezjuajua5@unipamplona.edu.co"
+    "email": "usuario@unipamplona.edu.co5@unipamplona.edu.co"
   }'
 ```
 
@@ -234,8 +234,8 @@ curl -X POST http://localhost:8000/api/v1/auth/password-reset/ \
 curl -X POST http://localhost:8000/api/v1/auth/password-reset-confirm/ \
   -H "Content-Type: application/json" \
   -d '{
-    "email": "juan.rodriguezjuajua5@unipamplona.edu.co",
-    "token": "738623",
+    "email": "usuario@unipamplona.edu.co",
+    "token": "123456",
     "nueva_contrasena": "SecurePass123."
   }'
 ```
@@ -244,9 +244,9 @@ curl -X POST http://localhost:8000/api/v1/auth/password-reset-confirm/ \
 ```bash
 curl -X POST http://localhost:8000/api/v1/auth/logout/ \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzYxMzYzNDg1LCJpYXQiOjE3NjEzNjI1ODUsImp0aSI6ImQ5YzgzZjU1ZjgyYTQ4YTI4ZGU5NGY1MTgyNmU1ZTkxIiwidXNlcl9pZCI6IjExIn0.Iu10L07EUUjOR4odGWsi87sGFCxt8zGKv3SQ8NabUkU" \
+  -H "Authorization: Bearer <token>" \
   -d '{
-    "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2MTk2NzU5OSwiaWF0IjoxNzYxMzYyNzk5LCJqdGkiOiJhOWZhNzAxY2Q2YzY0YWNkYjEyOGE1MGExYTZiYjBiOCIsInVzZXJfaWQiOiIxMSJ9.Ol_k59Te9_-AIPoaDG62-FZnubLJhr5C4zTtAJ6unJw"
+    "refresh": "<refresh-token>"
   }'
 ```
 
@@ -254,7 +254,7 @@ curl -X POST http://localhost:8000/api/v1/auth/logout/ \
 ```bash
 curl -X POST http://localhost:8000/api/v1/auth/deactivate/ \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzYxMzY0NDY5LCJpYXQiOjE3NjEzNjM1NjksImp0aSI6IjdhNmY0YmMxYmVkODQ0ZWVhNDBiZDEzMThhYjI5ZDAzIiwidXNlcl9pZCI6IjUifQ.jh-zz9Y3_5IsXk_TzoBaOxWbnldcMbErdJieXNedvaM" \
+  -H "Authorization: Bearer <token>" \
   -d '{
     "contrasena": "OtraClaveSegura123",
     "confirmacion": "desactivar"
@@ -262,7 +262,7 @@ curl -X POST http://localhost:8000/api/v1/auth/deactivate/ \
 ```
 
 #### 10.Update Profile (Authenticated)
-'''bash
+```bash
 curl -X PATCH "http://localhost:8000/api/v1/auth/profile-update/" \
 -H "Authorization: Bearer <token>" \
 -H "Content-Type: application/json" \
@@ -273,7 +273,7 @@ curl -X PATCH "http://localhost:8000/api/v1/auth/profile-update/" \
   "fechanacimiento": "1998-05-15",
   "descripcion": "Me gusta programar"
 }'
-'''
+```
 
 ## 6. Future Enhancements
 
