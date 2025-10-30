@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     "apps.profile_app",
     "apps.reports_app",
     "apps.chat_app",
+    "apps.preferences_app",
 
      # Third-party
     "rest_framework",
