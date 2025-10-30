@@ -15,7 +15,7 @@ from apps.auth_app.views.password_change_view import PasswordChangeView
 from apps.auth_app.views.password_reset_view import PasswordResetRequestView, PasswordResetConfirmView
 from apps.auth_app.views.deactivate_view import DeactivateAccountView
 
-app_name = "auth"
+app_name = "auth_app"
 
 urlpatterns = [
     # Registro y verificación

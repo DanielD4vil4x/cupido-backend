@@ -2,8 +2,7 @@
 from django.urls import path, include
 
 urlpatterns = [
-    path("preferences-filter/", include("apps.profile_app.preferences_filter.urls")),
-    path("imageUpload/", include("apps.profile_app.imageUpload.urls")),
-    path("profile/", include("apps.profile_app.profile.urls")),
+    path("imageUpload/", include("apps.profile_app.subapps.imageUpload.urls")),
+    path("profile/", include("apps.profile_app.subapps.profile.urls")),
     # path de get y update por definir para genelaizar uso de informacion en subaplicaciones
 ]

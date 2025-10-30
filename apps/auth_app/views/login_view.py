@@ -9,7 +9,7 @@ from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, Bl
 from apps.auth_app.serializers.login_serializer import LoginSerializer
 from apps.auth_app.serializers.usuario_serializer import UsuarioSerializer
 from apps.auth_app.utils.tokens import create_jwt_for_user
-from legacy_models.models import Usuario
+from apps.auth_app.models import Usuario
 
 logger = logging.getLogger(__name__)
 

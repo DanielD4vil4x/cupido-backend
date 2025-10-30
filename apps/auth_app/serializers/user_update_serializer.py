@@ -2,7 +2,7 @@ from datetime import date
 
 from rest_framework import serializers
 
-from legacy_models.models import Usuario, Genero
+from apps.auth_app.models import Usuario, Genero
 from apps.auth_app.utils.validators import calculate_age
 
 

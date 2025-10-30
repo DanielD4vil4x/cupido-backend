@@ -2,7 +2,7 @@
 
 from apps.auth_app.utils.profile import compute_account_state
 from apps.auth_app.serializers.user_get_serializer import serialize_user_profile
-from legacy_models.models import Usuario
+from apps.auth_app.models import Usuario
 
 
 def get_user_profile_data(user: Usuario) -> dict:

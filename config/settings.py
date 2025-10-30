@@ -57,24 +57,27 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
 
-    # Third-party
-    "rest_framework",
-    "rest_framework_simplejwt",
-    "rest_framework_simplejwt.token_blacklist",
-    "corsheaders",
-
-    # Local apps
+ # Local apps
     "apps.auth_app",
     "apps.match_app",
     "apps.profile_app",
     "apps.reports_app",
     "apps.chat_app",
-    "legacy_models",
+
+     # Third-party
+    "rest_framework",
+    "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
+    "corsheaders",
 ]
+   
+
+   
 # -------------------------
 # Custom User Model
 # -------------------------
-AUTH_USER_MODEL = "legacy_models.Usuario"
+AUTH_USER_MODEL = "auth_app.Usuario"
+
 
 # -------------------------
 # Middleware

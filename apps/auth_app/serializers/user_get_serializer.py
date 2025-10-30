@@ -1,7 +1,7 @@
 # apps/auth_app/serializers/user_get_serializer.py
 
 from rest_framework import serializers
-from legacy_models.models import Usuario
+from apps.auth_app.models import Usuario
 
 
 class UserGetSerializer(serializers.Serializer):
@@ -29,11 +29,9 @@ class UserGetSerializer(serializers.Serializer):
     
     # Foreign key relations
     programa_id = serializers.IntegerField(allow_null=True, source='programa.programa_id')
-    orientacion_id = serializers.IntegerField(allow_null=True, source='orientacion.orientacion_id')
     ubicacion_id = serializers.IntegerField(allow_null=True, source='ubicacion.ubicacion_id')
     genero_id = serializers.IntegerField(allow_null=True, source='genero.genero_id')
     genero_descripcion = serializers.CharField(allow_null=True, source='genero.descripcion')
-    semestreubicacion_id = serializers.IntegerField(allow_null=True, source='semestreubicacion.semestreubicacion_id')
 
 
 def serialize_user_profile(user: Usuario) -> dict:
@@ -61,8 +59,6 @@ def serialize_user_profile(user: Usuario) -> dict:
         "genero_id": user.genero.genero_id if user.genero else None,
         "genero_descripcion": user.genero.descripcion if user.genero else None,
         "programa_id": user.programa.programa_id if user.programa else None,
-        "orientacion_id": user.orientacion.orientacion_id if user.orientacion else None,
         "ubicacion_id": user.ubicacion.ubicacion_id if user.ubicacion else None,
-        "semestreubicacion_id": user.semestreubicacion.semestreubicacion_id if user.semestreubicacion else None,
     }
 

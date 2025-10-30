@@ -1,7 +1,7 @@
 # apps/auth_app/serializers/resend_serializer.py
 from rest_framework import serializers
 from apps.auth_app.utils.validators import validate_institutional_email
-from legacy_models.models import Usuario
+from apps.auth_app.models import Usuario
 
 class ResendCodeSerializer(serializers.Serializer):
     """

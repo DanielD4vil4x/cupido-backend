@@ -261,6 +261,20 @@ curl -X POST http://localhost:8000/api/v1/auth/deactivate/ \
   }'
 ```
 
+#### 10.Update Profile (Authenticated)
+'''bash
+curl -X PATCH "http://localhost:8000/api/v1/auth/profile-update/" \
+-H "Authorization: Bearer <token>" \
+-H "Content-Type: application/json" \
+-d '{
+  "nombres": "Juan",
+  "apellidos": "Pérez",
+  "genero_id": 1,
+  "fechanacimiento": "1998-05-15",
+  "descripcion": "Me gusta programar"
+}'
+'''
+
 ## 6. Future Enhancements
 
 ### Security & Features

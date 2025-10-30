@@ -1,7 +1,7 @@
 # apps/auth_app/serializers/usuario_serializer.py
 
 from rest_framework import serializers
-from legacy_models.models import Usuario
+from apps.auth_app.models import Usuario
 
 
 class UsuarioSerializer(serializers.ModelSerializer):

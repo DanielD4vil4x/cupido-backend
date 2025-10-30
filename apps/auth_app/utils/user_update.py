@@ -1,7 +1,7 @@
 # apps/auth_app/utils/user_update.py
 
 from apps.auth_app.utils.profile import is_profile_complete
-from legacy_models.models import Usuario
+from apps.auth_app.models import Usuario
 
 
 def update_user_profile_completion_status(user: Usuario) -> None:

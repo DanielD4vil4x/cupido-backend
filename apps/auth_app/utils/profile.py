@@ -1,6 +1,6 @@
 from datetime import date
 
-from legacy_models.models import Usuario
+from apps.auth_app.models import Usuario
 
 
 REQUIRED_COMPLETION_FIELDS = [
