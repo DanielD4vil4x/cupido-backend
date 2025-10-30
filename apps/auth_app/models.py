@@ -7,16 +7,16 @@ class Genero(models.Model):
     descripcion = models.CharField(max_length=30)
     fecha_creacion = models.DateTimeField(blank=True, null=True)
 
-class Meta:
-    db_table = 'genero'
+    class Meta:
+        db_table = 'genero'
 
 class Ubicacion(models.Model):
     ubicacion_id = models.AutoField(primary_key=True)
     descripcion = models.CharField(max_length=100)
     fecha_creacion = models.DateTimeField(blank=True, null=True)
 
-class Meta:
-    db_table = 'ubicacion'
+    class Meta:
+        db_table = 'ubicacion'
 
 
 class Programa(models.Model):
@@ -24,8 +24,8 @@ class Programa(models.Model):
     descripcion = models.CharField(max_length=60)
     fecha_creacion = models.DateTimeField(blank=True, null=True)
 
-class Meta:
-    db_table = 'programa'
+    class Meta:
+        db_table = 'programa'
 
 class Usuario(AbstractUser):
     usuario_id = models.AutoField(primary_key=True)
