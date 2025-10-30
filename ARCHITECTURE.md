@@ -17,16 +17,12 @@ This is a Django-based backend API for the cUPido dating application, targeted a
 - **User Proxy Model**: Provides compatibility with SimpleJWT by aliasing `usuario_id` as `id`
 - **Rate Limiting**: Protection against abuse on critical endpoints (registration, verification, login)
 
-### Legacy Models (legacy_models)
-- **User Model**: Comprehensive user profile with fields for personal info, preferences, and relationships
-- **Supporting Models**: Gender, Orientation, Program, Location, Semester Location tables
-- **Verification Model**: For email verification codes (though currently unused in favor of Redis)
-
 ### Other Apps
 - **chat_app**: Placeholder for chat functionality (not implemented)
 - **match_app**: Placeholder for matching algorithms (not implemented)
-- **profile_app**: Placeholder for profile management (not implemented)
+- **profile_app**: Placeholder for profile management (in course)
 - **reports_app**: Placeholder for reporting features (not implemented)
+- **preferences_app**: Placeholder for featuring of preferences (in course)
 
 ## 2. Architecture
 
@@ -40,8 +36,7 @@ cupido-backend/
 │   ├── match_app/         # Matching system (placeholder)
 │   ├── profile_app/       # Profile management (placeholder)
 │   ├── reports_app/       # Reporting features (placeholder)
-│   └── legacy_models/     # Legacy database models
-├── legacy_models/         # Additional legacy models
+│   └── preferences_app/     # Preferences funcionality (placeholder)
 ├── manage.py
 ├── requirements.txt
 └── .env.example
@@ -57,7 +52,6 @@ cupido-backend/
 
 ### Architecture Patterns
 - **App-based Architecture**: Modular Django apps for different features
-- **Legacy Integration**: Proxy models to work with existing database schema
 - **REST API**: DRF-based API endpoints
 - **Microservices-ready**: Apps can be developed independently
 
@@ -87,6 +81,8 @@ cupido-backend/
   - `password_change_view.py`: Change password for authenticated users
   - `password_reset_view.py`: Password reset request and confirmation
   - `deactivate_view.py`: Account deactivation (soft delete)
+  - `user_get_view.py:` Retrieve authenticated user profile information
+  - `user_update_view.py:` Update authenticated user profile information
 - `serializers/`: DRF serializers for data validation (modular, one serializer per file)
   - `register_serializer.py`: Complete registration validation
   - `verify_serializer.py`: Email verification validation
@@ -111,15 +107,9 @@ cupido-backend/
 - `README.md`: Detailed auth module documentation
 
 
-### legacy_models/
-- `models.py`: Legacy database models (managed=False)
-- `admin.py`: Admin registration (empty)
-- `views.py`: Views (empty)
-- `apps.py`: App configuration
-
 ## 4. Security & Architecture Status
 
-### ✅ Security Improvements Implemented
+### Security Improvements Implemented
 - **Password Hashing**: All passwords are properly hashed using Django's make_password() and validated with check_password()
 - **Comprehensive Validation**: Email domain validation, age verification (≥18), reCAPTCHA, FK existence checks
 - **JWT Security**: Proper token generation, blacklist for logout, configurable expiration times
@@ -127,7 +117,7 @@ cupido-backend/
 - **Redis Security**: TTL-based expiration for sensitive data, attempt limits for verification codes
 - **Input Validation**: All serializers include proper validation with meaningful error messages
 
-### ✅ Architecture Improvements Implemented
+### Architecture Improvements Implemented
 - **Modular Design**: Each view, serializer, and utility in separate files following single responsibility
 - **Error Handling**: Comprehensive logging and exception handling throughout the application
 - **Code Reusability**: Utility functions centralized in utils/ directory
@@ -167,6 +157,7 @@ cupido-backend/
 | POST | `/api/auth/password-reset/` | Request password reset | No |
 | POST | `/api/auth/password-reset-confirm/` | Confirm password reset | No |
 | POST | `/api/auth/deactivate/` | Deactivate account | Yes |
+| PATCH | `/api/auth/user-update/` | Update current user info | Yes |
 
 ### cURL Examples
 
@@ -261,9 +252,9 @@ curl -X POST http://localhost:8000/api/v1/auth/deactivate/ \
   }'
 ```
 
-#### 10.Update Profile (Authenticated)
+#### 10.Update User (Authenticated)
 ```bash
-curl -X PATCH "http://localhost:8000/api/v1/auth/profile-update/" \
+curl -X PATCH "http://localhost:8000/api/v1/auth/user-update/" \
 -H "Authorization: Bearer <token>" \
 -H "Content-Type: application/json" \
 -d '{
