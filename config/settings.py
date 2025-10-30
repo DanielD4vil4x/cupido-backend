@@ -13,6 +13,7 @@ load_dotenv()
 # Basic paths and keys
 # -------------------------
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 SECRET_KEY = os.getenv("SECRET_KEY", "insecure-default-key")
 RECAPTCHA_SECRET_KEY = os.getenv("RECAPTCHA_SECRET_KEY")
@@ -43,7 +44,6 @@ else:
     CORS_ALLOWED_ORIGINS = [o for o in cors_env.split(",") if o] if cors_env else []
 
 CORS_ALLOW_CREDENTIALS = True
-#os.getenv("CORS_ALLOW_CREDENTIALS", "False").lower() == "true"
 
 # -------------------------
 # Applications
@@ -57,24 +57,28 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
 
-    # Third-party
-    "rest_framework",
-    "rest_framework_simplejwt",
-    "rest_framework_simplejwt.token_blacklist",
-    "corsheaders",
-
-    # Local apps
+ # Local apps
     "apps.auth_app",
     "apps.match_app",
     "apps.profile_app",
     "apps.reports_app",
     "apps.chat_app",
-    "legacy_models",
+    "apps.preferences_app",
+
+     # Third-party
+    "rest_framework",
+    "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
+    "corsheaders",
 ]
+   
+
+   
 # -------------------------
 # Custom User Model
 # -------------------------
-AUTH_USER_MODEL = "legacy_models.Usuario"
+AUTH_USER_MODEL = "auth_app.Usuario"
+
 
 # -------------------------
 # Middleware
@@ -112,26 +116,11 @@ WSGI_APPLICATION = "config.wsgi.application"
 # Database
 # -------------------------
 DATABASES = {
-     "default": dj_database_url.config(
-         default=os.getenv(
-             "DATABASE_URL",
-             "postgresql://postgres:postgres@localhost:5432/cupido"
-         ),
-         conn_max_age=int(os.getenv("DB_CONN_MAX_AGE", 600)),
-         ssl_require=os.getenv("DB_SSL_REQUIRE", "False").lower() == "true" and not DEBUG,
-     )
- }
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'CUPIDO',
-#         'USER': 'LAGO',
-#         'PASSWORD': 'Cupido20252',
-#         'HOST': '190.107.20.156',
-#         'PORT': '5432',
-#     }
-# }
+    "default": dj_database_url.config(
+        conn_max_age=int(os.getenv("DB_CONN_MAX_AGE", 600)),
+        ssl_require=os.getenv("DB_SSL_REQUIRE", "False").lower() == "true" and not DEBUG,
+    )
+}
 
 # -------------------------
 # Redis / Cache
@@ -141,7 +130,9 @@ CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": REDIS_URL,
-        "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient"},
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient"
+            },
     }
 }
 

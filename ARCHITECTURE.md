@@ -17,16 +17,12 @@ This is a Django-based backend API for the cUPido dating application, targeted a
 - **User Proxy Model**: Provides compatibility with SimpleJWT by aliasing `usuario_id` as `id`
 - **Rate Limiting**: Protection against abuse on critical endpoints (registration, verification, login)
 
-### Legacy Models (legacy_models)
-- **User Model**: Comprehensive user profile with fields for personal info, preferences, and relationships
-- **Supporting Models**: Gender, Orientation, Program, Location, Semester Location tables
-- **Verification Model**: For email verification codes (though currently unused in favor of Redis)
-
 ### Other Apps
 - **chat_app**: Placeholder for chat functionality (not implemented)
 - **match_app**: Placeholder for matching algorithms (not implemented)
-- **profile_app**: Placeholder for profile management (not implemented)
+- **profile_app**: Placeholder for profile management (in course)
 - **reports_app**: Placeholder for reporting features (not implemented)
+- **preferences_app**: Placeholder for featuring of preferences (in course)
 
 ## 2. Architecture
 
@@ -40,8 +36,7 @@ cupido-backend/
 │   ├── match_app/         # Matching system (placeholder)
 │   ├── profile_app/       # Profile management (placeholder)
 │   ├── reports_app/       # Reporting features (placeholder)
-│   └── legacy_models/     # Legacy database models
-├── legacy_models/         # Additional legacy models
+│   └── preferences_app/     # Preferences funcionality (placeholder)
 ├── manage.py
 ├── requirements.txt
 └── .env.example
@@ -57,7 +52,6 @@ cupido-backend/
 
 ### Architecture Patterns
 - **App-based Architecture**: Modular Django apps for different features
-- **Legacy Integration**: Proxy models to work with existing database schema
 - **REST API**: DRF-based API endpoints
 - **Microservices-ready**: Apps can be developed independently
 
@@ -87,6 +81,8 @@ cupido-backend/
   - `password_change_view.py`: Change password for authenticated users
   - `password_reset_view.py`: Password reset request and confirmation
   - `deactivate_view.py`: Account deactivation (soft delete)
+  - `user_get_view.py:` Retrieve authenticated user profile information
+  - `user_update_view.py:` Update authenticated user profile information
 - `serializers/`: DRF serializers for data validation (modular, one serializer per file)
   - `register_serializer.py`: Complete registration validation
   - `verify_serializer.py`: Email verification validation
@@ -111,15 +107,9 @@ cupido-backend/
 - `README.md`: Detailed auth module documentation
 
 
-### legacy_models/
-- `models.py`: Legacy database models (managed=False)
-- `admin.py`: Admin registration (empty)
-- `views.py`: Views (empty)
-- `apps.py`: App configuration
-
 ## 4. Security & Architecture Status
 
-### ✅ Security Improvements Implemented
+### Security Improvements Implemented
 - **Password Hashing**: All passwords are properly hashed using Django's make_password() and validated with check_password()
 - **Comprehensive Validation**: Email domain validation, age verification (≥18), reCAPTCHA, FK existence checks
 - **JWT Security**: Proper token generation, blacklist for logout, configurable expiration times
@@ -127,7 +117,7 @@ cupido-backend/
 - **Redis Security**: TTL-based expiration for sensitive data, attempt limits for verification codes
 - **Input Validation**: All serializers include proper validation with meaningful error messages
 
-### ✅ Architecture Improvements Implemented
+### Architecture Improvements Implemented
 - **Modular Design**: Each view, serializer, and utility in separate files following single responsibility
 - **Error Handling**: Comprehensive logging and exception handling throughout the application
 - **Code Reusability**: Utility functions centralized in utils/ directory
@@ -167,6 +157,7 @@ cupido-backend/
 | POST | `/api/auth/password-reset/` | Request password reset | No |
 | POST | `/api/auth/password-reset-confirm/` | Confirm password reset | No |
 | POST | `/api/auth/deactivate/` | Deactivate account | Yes |
+| PATCH | `/api/auth/user-update/` | Update current user info | Yes |
 
 ### cURL Examples
 
@@ -197,7 +188,7 @@ curl -X POST http://localhost:8000/api/v1/auth/verify-email/ \
 curl -X POST http://localhost:8000/api/v1/auth/login/ \
   -H "Content-Type: application/json" \
   -d '{
-    "email": "juan.rodriguezjuajua5@unipamplona.edu.co",
+    "email": "usuario@unipamplona.edu.co",
     "contrasena": "SecurePass123.",
     "recaptcha_token" : "recaptcha_response_token"
   }'
@@ -206,14 +197,14 @@ curl -X POST http://localhost:8000/api/v1/auth/login/ \
 #### 4. Get Session Info (Authenticated)
 ```bash
 curl -X GET http://localhost:8000/api/v1/auth/session/ \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzYxMzYzNDg1LCJpYXQiOjE3NjEzNjI1ODUsImp0aSI6ImQ5YzgzZjU1ZjgyYTQ4YTI4ZGU5NGY1MTgyNmU1ZTkxIiwidXNlcl9pZCI6IjExIn0.Iu10L07EUUjOR4odGWsi87sGFCxt8zGKv3SQ8NabUkU"
+  -H "Authorization: Bearer <token>"
 ```
 
 #### 5. Password Change (Authenticated)
 ```bash
 curl -X POST http://localhost:8000/api/v1/auth/password-change/ \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzYxMzYzNDg1LCJpYXQiOjE3NjEzNjI1ODUsImp0aSI6ImQ5YzgzZjU1ZjgyYTQ4YTI4ZGU5NGY1MTgyNmU1ZTkxIiwidXNlcl9pZCI6IjExIn0.Iu10L07EUUjOR4odGWsi87sGFCxt8zGKv3SQ8NabUkU" \
+  -H "Authorization: Bearer <token>" \
   -d '{
     "contrasena_actual": "SecurePass123.",
     "nueva_contrasena": "NewSecurePass123."
@@ -225,7 +216,7 @@ curl -X POST http://localhost:8000/api/v1/auth/password-change/ \
 curl -X POST http://localhost:8000/api/v1/auth/password-reset/ \
   -H "Content-Type: application/json" \
   -d '{
-    "email": "juan.rodriguezjuajua5@unipamplona.edu.co"
+    "email": "usuario@unipamplona.edu.co5@unipamplona.edu.co"
   }'
 ```
 
@@ -234,8 +225,8 @@ curl -X POST http://localhost:8000/api/v1/auth/password-reset/ \
 curl -X POST http://localhost:8000/api/v1/auth/password-reset-confirm/ \
   -H "Content-Type: application/json" \
   -d '{
-    "email": "juan.rodriguezjuajua5@unipamplona.edu.co",
-    "token": "738623",
+    "email": "usuario@unipamplona.edu.co",
+    "token": "123456",
     "nueva_contrasena": "SecurePass123."
   }'
 ```
@@ -244,9 +235,9 @@ curl -X POST http://localhost:8000/api/v1/auth/password-reset-confirm/ \
 ```bash
 curl -X POST http://localhost:8000/api/v1/auth/logout/ \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzYxMzYzNDg1LCJpYXQiOjE3NjEzNjI1ODUsImp0aSI6ImQ5YzgzZjU1ZjgyYTQ4YTI4ZGU5NGY1MTgyNmU1ZTkxIiwidXNlcl9pZCI6IjExIn0.Iu10L07EUUjOR4odGWsi87sGFCxt8zGKv3SQ8NabUkU" \
+  -H "Authorization: Bearer <token>" \
   -d '{
-    "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2MTk2NzU5OSwiaWF0IjoxNzYxMzYyNzk5LCJqdGkiOiJhOWZhNzAxY2Q2YzY0YWNkYjEyOGE1MGExYTZiYjBiOCIsInVzZXJfaWQiOiIxMSJ9.Ol_k59Te9_-AIPoaDG62-FZnubLJhr5C4zTtAJ6unJw"
+    "refresh": "<refresh-token>"
   }'
 ```
 
@@ -254,11 +245,25 @@ curl -X POST http://localhost:8000/api/v1/auth/logout/ \
 ```bash
 curl -X POST http://localhost:8000/api/v1/auth/deactivate/ \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzYxMzY0NDY5LCJpYXQiOjE3NjEzNjM1NjksImp0aSI6IjdhNmY0YmMxYmVkODQ0ZWVhNDBiZDEzMThhYjI5ZDAzIiwidXNlcl9pZCI6IjUifQ.jh-zz9Y3_5IsXk_TzoBaOxWbnldcMbErdJieXNedvaM" \
+  -H "Authorization: Bearer <token>" \
   -d '{
     "contrasena": "OtraClaveSegura123",
     "confirmacion": "desactivar"
   }'
+```
+
+#### 10.Update User (Authenticated)
+```bash
+curl -X PATCH "http://localhost:8000/api/v1/auth/user-update/" \
+-H "Authorization: Bearer <token>" \
+-H "Content-Type: application/json" \
+-d '{
+  "nombres": "Juan",
+  "apellidos": "Pérez",
+  "genero_id": 1,
+  "fechanacimiento": "1998-05-15",
+  "descripcion": "Me gusta programar"
+}'
 ```
 
 ## 6. Future Enhancements

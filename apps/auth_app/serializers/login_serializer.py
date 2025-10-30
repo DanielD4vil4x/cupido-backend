@@ -2,7 +2,7 @@
 
 from django.contrib.auth.hashers import check_password
 from rest_framework import serializers
-from legacy_models.models import Usuario
+from apps.auth_app.models import Usuario
 
 # Utilidades (implementarlas en apps.auth_app.utils)
 from apps.auth_app.utils.recaptcha import verify_recaptcha_token
@@ -51,7 +51,7 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 {"email": f"Cuenta {estadocuenta}. No se permite el acceso."}
             )
-        elif estadocuenta not in ["activa", "incompleta", "Menor"]:
+        elif estadocuenta not in ["completa", "incompleta"]:
             raise serializers.ValidationError(
                 {"email": "Estado de cuenta inválido."}
             )

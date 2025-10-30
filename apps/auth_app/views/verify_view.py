@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from legacy_models.models import Usuario
+from apps.auth_app.models import Usuario
 from apps.auth_app.serializers.verify_serializer import VerifyEmailSerializer
 # UsuarioProxy eliminado, ahora usamos Usuario directamente
 from apps.auth_app.utils.redis_client import delete_key

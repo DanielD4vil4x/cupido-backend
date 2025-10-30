@@ -5,7 +5,7 @@ from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from datetime import date
 
-from legacy_models.models import Usuario, Programa, Genero, Semestresubicacion
+from apps.auth_app.models import Usuario, Programa, Genero
 
 # Utilidades (implementarlas en apps.auth_app.utils)
 from apps.auth_app.utils.recaptcha import verify_recaptcha_token

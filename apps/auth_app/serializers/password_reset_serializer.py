@@ -9,7 +9,7 @@ import logging
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
-from legacy_models.models import Usuario
+from apps.auth_app.models import Usuario
 
 from apps.auth_app.utils.validators import validate_institutional_email
 from apps.auth_app.utils.redis_client import set_json, get_json, delete_key

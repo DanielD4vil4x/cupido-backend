@@ -1,6 +1,6 @@
-# apps/match_app/urls.py
+# apps/chat_app/urls.py
 from django.urls import path
 
 urlpatterns = [
-    # Puedes dejarlo vacío por ahora, pero debe existir
+    # Endpoints de chat pendientes de implementación
 ]
