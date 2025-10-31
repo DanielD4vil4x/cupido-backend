@@ -46,7 +46,7 @@ class Usuario(AbstractUser):
     likes = models.IntegerField(blank=True, null=True)
     filtros = models.CharField(max_length=255, blank=True, null=True)
     fecharegistro = models.DateTimeField(blank=True, null=True)
-    estadocuenta = models.CharField(max_length=50, blank=True, null=True)
+    estadocuenta = models.CharField(max_length=1, blank=True, null=True)
     tyc = models.BooleanField(blank=True, null=True)
 
     USERNAME_FIELD = 'email'

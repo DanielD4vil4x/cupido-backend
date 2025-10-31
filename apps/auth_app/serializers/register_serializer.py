@@ -4,6 +4,7 @@ from django.contrib.auth.hashers import make_password
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from datetime import date
+from django.utils import timezone
 
 from apps.auth_app.models import Usuario, Programa, Genero
 
@@ -93,10 +94,9 @@ class RegisterSerializer(serializers.Serializer):
           - cualquier validación adicional que requiera varios campos
         """
         # Establecer estado de cuenta por defecto
-        attrs["estadocuenta"] = "incompleta"
+        attrs["estadocuenta"] = "1"
 
         # Establecer fecha de registro por defecto (se puede actualizar luego)
-        from django.utils import timezone
         attrs["fecharegistro"] = timezone.now()
 
         # No incluimos recaptcha_token en payload final (no lo almacenamos)

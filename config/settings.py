@@ -167,11 +167,7 @@ REST_FRAMEWORK = {
         "rest_framework.throttling.UserRateThrottle",
         "rest_framework.throttling.AnonRateThrottle",
     ],
-    "DEFAULT_THROTTLE_RATES": {
-        "user": os.getenv("THROTTLE_USER", "1000/day"),
-        "anon": os.getenv("THROTTLE_ANON", "100/day"),
-        "verify_email": os.getenv("THROTTLE_VERIFY_EMAIL", "3/min"),
-    },
+
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
     "PAGE_SIZE": int(os.getenv("PAGE_SIZE", 10)),
     "DEFAULT_VERSIONING_CLASS": "rest_framework.versioning.NamespaceVersioning",
