@@ -56,8 +56,8 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         except Exception:
             # Fallback mínimo si la util no está disponible
             age = today.year - value.year - ((today.month, today.day) < (value.month, value.day))
-        if age < 16:
-            raise serializers.ValidationError("Debes tener al menos 16 años.")
+        if age < 18:
+            raise serializers.ValidationError("Debes tener al menos 18 años.")
         return value
 
     def validate_genero_id(self, value):
