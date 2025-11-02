@@ -15,14 +15,8 @@ class UserGetSerializer(serializers.Serializer):
     apellidos = serializers.CharField()
     email = serializers.EmailField()
     fechanacimiento = serializers.DateField()
-    #apodo = serializers.CharField()
     numerotelefono = serializers.CharField()
-    #imagen_principal = serializers.CharField(allow_null=True)
     descripcion = serializers.CharField(allow_null=True, allow_blank=True)
-    #gustos = serializers.CharField(allow_null=True, allow_blank=True)
-    #estatura = serializers.FloatField(allow_null=True)
-    #likes = serializers.IntegerField(allow_null=True)
-    #filtros = serializers.CharField(allow_null=True, allow_blank=True)
     fecharegistro = serializers.DateTimeField(allow_null=True)
     estadocuenta = serializers.CharField(allow_null=True, allow_blank=True)
     tyc = serializers.BooleanField(allow_null=True)
@@ -31,7 +25,6 @@ class UserGetSerializer(serializers.Serializer):
     programa_id = serializers.IntegerField(allow_null=True, source='programa.programa_id')
     ubicacion_id = serializers.IntegerField(allow_null=True, source='ubicacion.ubicacion_id')
     genero_id = serializers.IntegerField(allow_null=True, source='genero.genero_id')
-    #genero_descripcion = serializers.CharField(allow_null=True, source='genero.descripcion')
 
 
 def serialize_user_profile(user: Usuario) -> dict:
@@ -45,19 +38,12 @@ def serialize_user_profile(user: Usuario) -> dict:
         "apellidos": user.apellidos,
         "email": user.email,
         "fechanacimiento": user.fechanacimiento,
-        #"apodo": user.apodo,
         "numerotelefono": user.numerotelefono,
-        #"imagen_principal": user.imagen_principal,
         "descripcion": user.descripcion,
-        #"gustos": user.gustos,
-        #"estatura": user.estatura,
-        #"likes": user.likes,
-        #"filtros": user.filtros,
         "fecharegistro": user.fecharegistro,
         "estadocuenta": user.estadocuenta,
         "tyc": user.tyc,
         "genero_id": user.genero.genero_id if user.genero else None,
-        #"genero_descripcion": user.genero.descripcion if user.genero else None,
         "programa_id": user.programa.programa_id if user.programa else None,
         "ubicacion_id": user.ubicacion.ubicacion_id if user.ubicacion else None,
     }
