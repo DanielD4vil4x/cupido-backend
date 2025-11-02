@@ -1,8 +1,9 @@
-# apps/profile_app/profile/urls.py
 from django.urls import path
-from profile.views.create_profile_view import CreateView
+from .views import ProfileUpdateView, PerfilDetailView, PerfilAdminUpdateView
 
 urlpatterns = [
-      path("create-profile/", CreateView.as_view(), name="login"),
-]
+    path("update/", ProfileUpdateView.as_view(), name="profile-update"),
+    path("<int:pk>/", PerfilDetailView.as_view(), name="profile-detail"),
+    path("admin/<int:pk>/", PerfilAdminUpdateView.as_view(), name="profile-admin-update"),
 
+]
