@@ -29,8 +29,6 @@ class Programa(models.Model):
 
 class Usuario(AbstractUser):
     usuario_id = models.AutoField(primary_key=True)
-    programa = models.ForeignKey(Programa, models.DO_NOTHING, blank=True, null=True)
-    ubicacion = models.ForeignKey(Ubicacion, models.DO_NOTHING, blank=True, null=True)
     genero = models.ForeignKey(Genero, models.DO_NOTHING, blank=True, null=True)
     nombres = models.CharField(max_length=50)
     apellidos = models.CharField(max_length=50)

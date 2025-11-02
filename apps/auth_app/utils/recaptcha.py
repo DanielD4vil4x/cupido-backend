@@ -18,6 +18,10 @@ def verify_recaptcha_token(token: str) -> tuple[bool, dict]:
     Returns:
         tuple: (success: bool, details: dict)
     """
+    if settings.DEBUG:
+        print("🤖 [DEBUG] Saltando la verificación de reCAPTCHA. Devolviendo éxito (True) automáticamente.")
+        return True, {"detail": "Verification skipped in DEBUG mode."}
+        
     secret_key = getattr(settings, "RECAPTCHA_SECRET_KEY", None)
     if not secret_key:
         raise ImproperlyConfigured("RECAPTCHA_SECRET_KEY no está configurada en settings.")
