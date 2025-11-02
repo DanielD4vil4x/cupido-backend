@@ -41,12 +41,13 @@ class VerifyEmailView(APIView):
                 apellidos="Dummy",  # Valor dummy
                 email=email,
                 password=registration_payload.get("password"),  # ya hasheada
-                apodo="",  # Valor dummy
+                #apodo="",  # Valor dummy
                 numerotelefono="0000000000",  # Valor dummy
                 tyc=registration_payload.get("tyc", True),
-                estadocuenta=registration_payload.get("estadocuenta", "incompleta"),
+                estadocuenta=registration_payload.get("estadocuenta", "1"),
                 fecharegistro=registration_payload.get("fecharegistro"),
-                fechanacimiento="2000-01-01",  # Valor dummy
+                fechanacimiento="2000-01-01",  # Valor dummy,
+                username = email,
             )
         except Exception as e:
             return Response(

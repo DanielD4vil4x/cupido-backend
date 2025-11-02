@@ -9,8 +9,8 @@ def update_user_profile_completion_status(user: Usuario) -> None:
     Actualiza el estado de completitud del perfil del usuario.
     Si el perfil ahora cumple los mínimos, actualiza estadocuenta a 'completa'.
     """
-    if is_profile_complete(user) and user.estadocuenta != "completa":
-        user.estadocuenta = "completa"
+    if is_profile_complete(user) and user.estadocuenta != "0":
+        user.estadocuenta = "2"
         user.save(update_fields=["estadocuenta"])
 
 
@@ -34,6 +34,7 @@ def get_user_update_response_data(user: Usuario) -> dict:
             "genero_descripcion": user.genero.descripcion if user.genero else None,
             "fechanacimiento": user.fechanacimiento,
             "descripcion": user.descripcion,
+            "estadocuenta": user.estadocuenta,
         },
     }
 

@@ -11,7 +11,6 @@ REQUIRED_COMPLETION_FIELDS = [
     "descripcion",
 ]
 
-
 def is_profile_complete(user: Usuario) -> bool:
     """
     Determina si el perfil del usuario está completo con base en campos mínimos.
@@ -43,6 +42,10 @@ def compute_account_state(user: Usuario) -> str:
     """
     Devuelve "completa" si el perfil cumple mínimos, en caso contrario "incompleta".
     """
-    return "completa" if is_profile_complete(user) else "incompleta"
+    return "2" if is_profile_complete(user) else "1"
+
+
+
+    
 
 

@@ -27,12 +27,14 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             "genero_id",
             "fechanacimiento",
             "descripcion",
+            "estadocuenta",
         ]
         extra_kwargs = {
             "nombres": {"required": False},
             "apellidos": {"required": False},
             "fechanacimiento": {"required": False},
             "descripcion": {"required": False, "allow_blank": True},
+            "estadocuenta": {"required": False}, 
         }
 
     def validate_nombres(self, value):
@@ -56,8 +58,8 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         except Exception:
             # Fallback mínimo si la util no está disponible
             age = today.year - value.year - ((today.month, today.day) < (value.month, value.day))
-        if age < 16:
-            raise serializers.ValidationError("Debes tener al menos 16 años.")
+        if age < 18:
+            raise serializers.ValidationError("Debes tener al menos 18 años.")
         return value
 
     def validate_genero_id(self, value):
@@ -74,7 +76,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             instance.genero = Genero.objects.get(pk=genero_id) if genero_id else None
 
         # Asignar campos simples
-        for field in ["nombres", "apellidos", "fechanacimiento", "descripcion"]:
+        for field in ["nombres", "apellidos", "fechanacimiento", "descripcion", "estadocuenta"]:
             if field in validated_data:
                 setattr(instance, field, validated_data[field])
 
