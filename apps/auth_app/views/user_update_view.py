@@ -28,6 +28,12 @@ class UserUpdateView(APIView):
 
         # Actualizar estado de completitud del perfil
         update_user_profile_completion_status(user)
+        
+        def patch(self, request):
+            logger.info("=== USER UPDATE ENDPOINT ===")
+            logger.info(f"Usuario autenticado: {request.user.email}")
+            logger.info(f"Datos recibidos: {request.data}")
+            logger.info(f"Headers: {request.headers}")
 
         # Generar respuesta estructurada
         response = get_user_update_response_data(user)

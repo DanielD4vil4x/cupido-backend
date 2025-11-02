@@ -15,7 +15,7 @@ class UserGetView(APIView):
     - Requiere autenticación.
     """
 
-    permission_classes = [permissions.IsAuthenticated]
+    #permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
         user = request.user

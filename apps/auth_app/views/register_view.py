@@ -1,4 +1,5 @@
 # apps/auth_app/views/register_view.py
+#wertyujhbvcx
 import logging
 
 from rest_framework.views import APIView

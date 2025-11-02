@@ -25,7 +25,7 @@ def get_user_profile_data(user: Usuario) -> dict:
     
     return {
         "estado": estado,
-        "should_complete_profile": estado == "incompleta",
+        "should_complete_profile": estado in [1, 2, 3],
         "user": user_data,
     }
 

@@ -47,11 +47,11 @@ class LoginSerializer(serializers.Serializer):
 
         # 2️⃣ Verificar estado de cuenta
         estadocuenta = user.estadocuenta
-        if estadocuenta in ["inactiva", "reportada"]:
+        if estadocuenta in ["-2", "-1"]:
             raise serializers.ValidationError(
                 {"email": f"Cuenta {estadocuenta}. No se permite el acceso."}
             )
-        elif estadocuenta not in ["completa", "incompleta"]:
+        elif estadocuenta not in ["0", "1" , "2", "3"]:
             raise serializers.ValidationError(
                 {"email": "Estado de cuenta inválido."}
             )
