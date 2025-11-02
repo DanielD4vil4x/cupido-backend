@@ -115,26 +115,13 @@ WSGI_APPLICATION = "config.wsgi.application"
 # -------------------------
 # Database
 # -------------------------
-"""
+
 DATABASES = {
     "default": dj_database_url.config(
         conn_max_age=int(os.getenv("DB_CONN_MAX_AGE", 600)),
         ssl_require=os.getenv("DB_SSL_REQUIRE", "False").lower() == "true" and not DEBUG,
     )
 }
-"""
-
-
-DATABASES = {
-     'default': {
-         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'cupido_db',
-         'USER': 'postgres',
-         'PASSWORD': '1234',
-         'HOST': 'localhost',
-        'PORT': '5432',
-    }
- }
 
 
 # -------------------------
