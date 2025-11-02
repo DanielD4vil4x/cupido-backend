@@ -140,3 +140,4 @@ dmypy.json
 .DS_Store
 Thumbs.db
 PROJECT_REVIEW.md
+/apps/auth_app/migrations
