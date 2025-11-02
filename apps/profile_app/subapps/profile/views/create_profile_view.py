@@ -1,25 +1,29 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from apps.perfil.serializers.perfil_serializer import PerfilSerializer
-from apps.perfil.utils.perfil_utils import PerfilUtils
+# apps/profile_app/subapps/profile/views/create_profile_view.py
 
-class PerfilView(APIView):
+from rest_framework import status, permissions
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from ..serializers.create_profile_serializer import CreateProfileSerializer
+
+
+class CreateProfileView(APIView):
     """
-    Vista para creación de perfiles
+    Endpoint para crear perfil automáticamente.
+    POST: Crea perfil con valores por defecto para el usuario autenticado.
     """
+
+    permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        serializer = PerfilSerializer(data=request.data)
+        serializer = CreateProfileSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
-            try:
-                perfil = PerfilUtils.create_perfil(serializer.validated_data)
-                return Response(
-                    {"message": "Perfil creado exitosamente", "perfil_id": perfil.perfil_id},
-                    status=status.HTTP_201_CREATED
-                )
-            except ValueError as e:
-                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-            except Exception as e:
-                return Response({"error": f"Error inesperado: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            perfil = serializer.save()
+            return Response(
+                {
+                    "message": "Perfil creado exitosamente.",
+                    "perfil_id": perfil.perfil_id
+                },
+                status=status.HTTP_201_CREATED
+            )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
