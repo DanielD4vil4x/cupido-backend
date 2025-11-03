@@ -35,6 +35,7 @@ def get_user_update_response_data(user: Usuario) -> dict:
             "fechanacimiento": user.fechanacimiento,
             "descripcion": user.descripcion,
             "estadocuenta": user.estadocuenta,
+            "numerotelefono": user.numerotelefono,
         },
     }
 
