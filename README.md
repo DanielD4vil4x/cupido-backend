@@ -28,7 +28,7 @@ Antes de comenzar, asegúrate de tener instalado:
 
 ---
 
-## ⚙️ Tecnologías principales
+## Tecnologías principales
 
 - **Django** + **Django REST Framework**
 - **PostgreSQL 16.10**
@@ -52,5 +52,35 @@ source venv/bin/activate  # En Linux / Mac
 venv\Scripts\activate     # En Windows
 pip install -r requirements.txt 
 cd ..
+```
+
+---
+# IMPORTANTE ANTES DE EJECUTAR:
+### Asegúrate de tener un archivo .env con una base de datos limpia
+
+### Revisar migraciones
+```bash
+# Verificar que no tengan una X
+python manage.py showmigrations  
+
+# Crear migraciones de los modelos
+python manage.py makemigrations
+
+# Aplicar las migraciones a la base de datos
+python manage.py migrate
+```
+
+---
+### Abrir la base de datos en editor
+Ejecutar el archivo first_query.sql en la base de datos
+
+Esto permite el correcto funcionamiento del backend
+
+---
+
+### Ejecutar el servidor
+```bash
 python manage.py runserver
+```
+
 
