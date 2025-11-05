@@ -34,8 +34,10 @@ cupido-backend/
 │   ├── auth_app/          # Authentication module
 │   ├── chat_app/          # Chat functionality (placeholder)
 │   ├── match_app/         # Matching system (placeholder)
-│   ├── profile_app/       # Profile management (placeholder)
-│   ├── reports_app/       # Reporting features (placeholder)
+│   ├─ profile_app/
+│   │   └─ subapps/         # Sub-applications for profile
+│   │       └─ imageupload/ # Image management
+│   ├─ reports_app/         # Reporting features (placeholder)
 │   └── preferences_app/     # Preferences funcionality (placeholder)
 ├── manage.py
 ├── requirements.txt
