@@ -20,7 +20,7 @@ This is a Django-based backend API for the cUPido dating application, targeted a
 ### Other Apps
 - **chat_app**: Placeholder for chat functionality (not implemented)
 - **match_app**: Placeholder for matching algorithms (not implemented)
-- **profile_app**: Placeholder for profile management (in course)
+- **profile_app**: Basic profile management and image upload functionality.
 - **reports_app**: Placeholder for reporting features (not implemented)
 - **preferences_app**: Placeholder for featuring of preferences (in course)
 
