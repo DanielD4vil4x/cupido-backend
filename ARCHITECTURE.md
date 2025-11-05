@@ -160,6 +160,11 @@ cupido-backend/
 | POST | `/api/auth/password-reset-confirm/` | Confirm password reset | No |
 | POST | `/api/auth/deactivate/` | Deactivate account | Yes |
 | PATCH | `/api/auth/user-update/` | Update current user info | Yes |
+| GET | `/api/v1/profile/photos/` | List all user images | Yes |
+| POST | `/api/v1/profile/photos/` | Upload a new image | Yes |
+| GET | `/api/v1/profile/photos/{id}/` | Retrieve a specific image | Yes |
+| PATCH | `/api/v1/profile/photos/{id}/` | Update a specific image | Yes |
+| DELETE | `/api/v1/profile/photos/{id}/` | Delete a specific image | Yes |
 
 ### cURL Examples
 
