@@ -38,11 +38,6 @@ def is_profile_complete(user: Usuario) -> bool:
     return True
 
 
-def compute_account_state(user: Usuario) -> str:
-    """
-    Devuelve "completa" si el perfil cumple mínimos, en caso contrario "incompleta".
-    """
-    return "2" if is_profile_complete(user) else "1"
 
 
 
