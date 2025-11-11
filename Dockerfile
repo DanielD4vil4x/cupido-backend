@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+dFROM python:3.11-slim
 
 WORKDIR /app
 
@@ -10,4 +10,4 @@ COPY . .
 EXPOSE 8000
 
 # Ejecutar migraciones automáticamente antes de iniciar
-CMD ["bash", "-c", "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"]
+CMD ["bash", "-c", "python manage.py migrate --fake && python manage.py runserver 0.0.0.0:8000"]
