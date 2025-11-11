@@ -10,4 +10,4 @@ COPY . .
 EXPOSE 8000
 
 # Ejecutar migraciones automáticamente antes de iniciar
-CMD ["bash", "-c", "python manage.py migrate --fake && python manage.py runserver 0.0.0.0:8000"]
+CMD ["bash", "-c", "python manage.py makemigrations --fake && python manage.py migrate --fake && python manage.py runserver 0.0.0.0:8000"]
