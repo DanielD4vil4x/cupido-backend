@@ -21,10 +21,18 @@ ALLOWED_HOSTS = ["backend.cupidocol.com"]
 # Validación de variables críticas (simplificada con if anidado)
 if not SECRET_KEY:
     if not os.getenv("DATABASE_URL"):
-        raise RuntimeError("Variables de entorno críticas no encontradas: SECRET_KEY y DATABASE_URL")
-    raise RuntimeError("Variable de entorno crítica no encontrada: SECRET_KEY")
+        if not RECAPTCHA_SECRET_KEY:
+            raise RuntimeError("Variables críticas no encontradas: SECRET_KEY, DATABASE_URL, RECAPTCHA_SECRET_KEY")
+        raise RuntimeError("Variables críticas no encontradas: SECRET_KEY y DATABASE_URL")
+    if not RECAPTCHA_SECRET_KEY:
+        raise RuntimeError("Variables críticas no encontradas: SECRET_KEY y RECAPTCHA_SECRET_KEY")
+    raise RuntimeError("Variable crítica no encontrada: SECRET_KEY")
 if not os.getenv("DATABASE_URL"):
-    raise RuntimeError("Variable de entorno crítica no encontrada: DATABASE_URL")
+    if not RECAPTCHA_SECRET_KEY:
+        raise RuntimeError("Variables críticas no encontradas: DATABASE_URL y RECAPTCHA_SECRET_KEY")
+    raise RuntimeError("Variable crítica no encontrada: DATABASE_URL")
+if not RECAPTCHA_SECRET_KEY:
+    raise RuntimeError("Variable crítica no encontrada: RECAPTCHA_SECRET_KEY")
 
 # -------------------------
 # Locale / Time
