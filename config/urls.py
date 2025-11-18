@@ -1,7 +1,10 @@
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 from django.http import JsonResponse
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from rest_framework_simplejwt.views import TokenRefreshView
 
 
 API_TITLE = "Cupido API"
@@ -30,6 +33,7 @@ urlpatterns = [
     path("", root_view, name="api-root"),
 
     # Versión principal de la API
+    path("api/v1/auth/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("api/v1/auth/", include(("apps.auth_app.urls", "auth_app"), namespace="auth")),
     path("api/v1/profile/", include(("apps.profile_app.urls", "profile_app"), namespace="profile")),
     path("api/v1/match/", include(("apps.match_app.urls", "match_app"), namespace="match")),
@@ -41,6 +45,9 @@ urlpatterns = [
     #Documentación de API
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema")),
-]
+]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 

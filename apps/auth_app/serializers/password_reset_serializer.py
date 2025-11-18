@@ -17,7 +17,7 @@ from apps.auth_app.utils import email_utils
 
 logger = logging.getLogger(__name__)
 
-RESET_TOKEN_TTL = 1800  # 30 minutos
+RESET_TOKEN_TTL = 1800  
 
 
 class PasswordResetRequestSerializer(serializers.Serializer):

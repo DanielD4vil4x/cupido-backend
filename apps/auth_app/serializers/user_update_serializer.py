@@ -28,6 +28,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             "fechanacimiento",
             "descripcion",
             "estadocuenta",
+            "numerotelefono",
         ]
         extra_kwargs = {
             "nombres": {"required": False},
@@ -35,6 +36,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             "fechanacimiento": {"required": False},
             "descripcion": {"required": False, "allow_blank": True},
             "estadocuenta": {"required": False}, 
+            "numerotelefono": {"required": False},
         }
 
     def validate_nombres(self, value):
@@ -76,7 +78,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             instance.genero = Genero.objects.get(pk=genero_id) if genero_id else None
 
         # Asignar campos simples
-        for field in ["nombres", "apellidos", "fechanacimiento", "descripcion", "estadocuenta"]:
+        for field in ["nombres", "apellidos", "fechanacimiento", "descripcion", "estadocuenta","numerotelefono"]:
             if field in validated_data:
                 setattr(instance, field, validated_data[field])
 

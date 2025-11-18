@@ -1,7 +1,7 @@
-from rest_framework import generics, permissions, status
+from rest_framework import generics, permissions, status,viewsets
 from rest_framework.response import Response
 from apps.profile_app.subapps.profile.models import Perfil
-from apps.profile_app.subapps.profile.serializer import PerfilSerializer
+from apps.profile_app.subapps.profile.serializer import *
 from apps.profile_app.subapps.profile.utils import get_or_create_user_profile
 
 
@@ -59,3 +59,12 @@ class PerfilAdminUpdateView(generics.RetrieveUpdateAPIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ProgramaViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Programa.objects.all()
+    serializer_class = ProgramaSerializer
+
+
+class UbicacionViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Ubicacion.objects.all()
+    serializer_class = UbicacionSerializer

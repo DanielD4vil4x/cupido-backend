@@ -1,6 +1,5 @@
 # apps/auth_app/utils/user_get.py
 
-from apps.auth_app.utils.profile import compute_account_state
 from apps.auth_app.serializers.user_get_serializer import serialize_user_profile
 from apps.auth_app.models import Usuario
 
@@ -13,8 +12,8 @@ def get_user_profile_data(user: Usuario) -> dict:
     Returns:
         dict: Contiene 'estado', 'should_complete_profile' y 'user' con todos los campos
     """
-    estado = compute_account_state(user)
-    
+    estado = user.estadocuenta
+
     # Mantener sincronizado con el campo persistido si difiere
     if getattr(user, "estadocuenta", None) != estado:
         user.estadocuenta = estado
@@ -25,7 +24,7 @@ def get_user_profile_data(user: Usuario) -> dict:
     
     return {
         "estado": estado,
-        "should_complete_profile": estado in [1, 2, 3],
+        "should_complete_profile": estado in ["1","2","3"],
         "user": user_data,
     }
 

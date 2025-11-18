@@ -7,24 +7,32 @@ from dotenv import load_dotenv
 # -------------------------
 # Load environment variables
 # -------------------------
-load_dotenv()
+BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 # -------------------------
 # Basic paths and keys
 # -------------------------
-BASE_DIR = Path(__file__).resolve().parent.parent
-load_dotenv(os.path.join(BASE_DIR, '.env'))
-
-SECRET_KEY = os.getenv("SECRET_KEY", "insecure-default-key")
+SECRET_KEY = os.getenv("SECRET_KEY")
 RECAPTCHA_SECRET_KEY = os.getenv("RECAPTCHA_SECRET_KEY")
-DEBUG = os.getenv("DEBUG", "False").lower() == "true"
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+DEBUG = False  # Siempre False en producción
+ALLOWED_HOSTS = ["backend.cupidocol.com"]
 
-# Validate essential env vars (fail early)
-required_envs = ["SECRET_KEY", "DATABASE_URL"]
-for var in required_envs:
-    if not os.getenv(var):
-        raise RuntimeError(f"Variable de entorno obligatoria no encontrada: {var}")
+# Validación de variables críticas (simplificada con if anidado)
+if not SECRET_KEY:
+    if not os.getenv("DATABASE_URL"):
+        if not RECAPTCHA_SECRET_KEY:
+            raise RuntimeError("Variables críticas no encontradas: SECRET_KEY, DATABASE_URL, RECAPTCHA_SECRET_KEY")
+        raise RuntimeError("Variables críticas no encontradas: SECRET_KEY y DATABASE_URL")
+    if not RECAPTCHA_SECRET_KEY:
+        raise RuntimeError("Variables críticas no encontradas: SECRET_KEY y RECAPTCHA_SECRET_KEY")
+    raise RuntimeError("Variable crítica no encontrada: SECRET_KEY")
+if not os.getenv("DATABASE_URL"):
+    if not RECAPTCHA_SECRET_KEY:
+        raise RuntimeError("Variables críticas no encontradas: DATABASE_URL y RECAPTCHA_SECRET_KEY")
+    raise RuntimeError("Variable crítica no encontrada: DATABASE_URL")
+if not RECAPTCHA_SECRET_KEY:
+    raise RuntimeError("Variable crítica no encontrada: RECAPTCHA_SECRET_KEY")
 
 # -------------------------
 # Locale / Time
@@ -37,12 +45,7 @@ USE_TZ = True
 # -------------------------
 # CORS Configuration
 # -------------------------
-if DEBUG:
-    CORS_ALLOWED_ORIGINS = ["http://localhost:8080"]
-else:
-    cors_env = os.getenv("CORS_ALLOWED_ORIGINS", "")
-    CORS_ALLOWED_ORIGINS = [o for o in cors_env.split(",") if o] if cors_env else []
-
+CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", "https://frontend.cupidocol.com").split(",")
 CORS_ALLOW_CREDENTIALS = True
 
 # -------------------------
@@ -56,29 +59,24 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
- # Local apps
+    # Local apps
     "apps.auth_app",
     "apps.match_app",
     "apps.profile_app",
     "apps.reports_app",
     "apps.chat_app",
     "apps.preferences_app",
-
-     # Third-party
+    # Third-party
     "rest_framework",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
 ]
-   
 
-   
 # -------------------------
 # Custom User Model
 # -------------------------
 AUTH_USER_MODEL = "auth_app.Usuario"
-
 
 # -------------------------
 # Middleware
@@ -115,44 +113,45 @@ WSGI_APPLICATION = "config.wsgi.application"
 # -------------------------
 # Database
 # -------------------------
-
 DATABASES = {
     "default": dj_database_url.config(
-        conn_max_age=int(os.getenv("DB_CONN_MAX_AGE", 600)),
-        ssl_require=os.getenv("DB_SSL_REQUIRE", "False").lower() == "true" and not DEBUG,
+        default=os.getenv("DATABASE_URL"),
+        conn_max_age=600,
+        ssl_require=False,
     )
 }
-
 
 # -------------------------
 # Redis / Cache
 # -------------------------
-REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+REDIS_URL = os.getenv("REDIS_URL", "redis://default:enncefrd2yomncab@190.90.114.214:6379")
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": REDIS_URL,
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient"
-            },
+        },
     }
 }
 
 # -------------------------
 # Email Configuration
 # -------------------------
-EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
-EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
-EMAIL_PORT = int(os.getenv("EMAIL_PORT", 587))
-EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "True").lower() == "true"
-EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
-EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
-DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "no-reply@cupido.com")
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "cupidoup1@gmail.com")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "nzboyoqvawpbhcew")
+DEFAULT_FROM_EMAIL = "cupidoup1@gmail.com"
 
 # -------------------------
 # Static files
 # -------------------------
 STATIC_URL = "static/"
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # -------------------------
@@ -169,9 +168,8 @@ REST_FRAMEWORK = {
         "rest_framework.throttling.UserRateThrottle",
         "rest_framework.throttling.AnonRateThrottle",
     ],
-
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
-    "PAGE_SIZE": int(os.getenv("PAGE_SIZE", 10)),
+    "PAGE_SIZE": 10,
     "DEFAULT_VERSIONING_CLASS": "rest_framework.versioning.NamespaceVersioning",
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
@@ -180,12 +178,12 @@ REST_FRAMEWORK = {
 # JWT Configuration
 # -------------------------
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=int(os.getenv("JWT_ACCESS_MINUTES", 15))),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=int(os.getenv("JWT_REFRESH_DAYS", 7))),
-    "ROTATE_REFRESH_TOKENS": os.getenv("JWT_ROTATE_REFRESH_TOKENS", "True").lower() == "true",
-    "BLACKLIST_AFTER_ROTATION": os.getenv("JWT_BLACKLIST_AFTER_ROTATION", "True").lower() == "true",
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
     "AUTH_HEADER_TYPES": ("Bearer",),
-    "USER_ID_FIELD": "usuario_id",  # Usar usuario_id en lugar de id
+    "USER_ID_FIELD": "usuario_id",
 }
 
 # -------------------------
@@ -201,25 +199,20 @@ AUTH_PASSWORD_VALIDATORS = [
 # -------------------------
 # Proxy / HTTPS
 # -------------------------
-# Always define header for reverse proxy (e.g., nginx)
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # -------------------------
-# Production Security (applies when DEBUG=False)
+# Production Security
 # -------------------------
-if not DEBUG:
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-    SECURE_BROWSER_XSS_FILTER = True
-    SECURE_CONTENT_TYPE_NOSNIFF = True
-    X_FRAME_OPTIONS = "DENY"
-    SECURE_HSTS_SECONDS = int(os.getenv("SECURE_HSTS_SECONDS", 31536000))
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = os.getenv("SECURE_HSTS_INCLUDE_SUBDOMAINS", "True").lower() == "true"
-    SECURE_HSTS_PRELOAD = os.getenv("SECURE_HSTS_PRELOAD", "False").lower() == "true"
-    SECURE_SSL_REDIRECT = os.getenv("SECURE_SSL_REDIRECT", "True").lower() == "true"
-    csrf_trusted = os.getenv("CSRF_TRUSTED_ORIGINS", "")
-    if csrf_trusted:
-        CSRF_TRUSTED_ORIGINS = [u.strip() for u in csrf_trusted.split(",") if u.strip()]
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = "DENY"
+SECURE_HSTS_SECONDS = 31536000
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = False
+SECURE_SSL_REDIRECT = True
 
 # -------------------------
 # Logging
@@ -228,5 +221,5 @@ LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "handlers": {"console": {"class": "logging.StreamHandler"}},
-    "root": {"handlers": ["console"], "level": os.getenv("LOG_LEVEL", "INFO")},
+    "root": {"handlers": ["console"], "level": "INFO"},
 }

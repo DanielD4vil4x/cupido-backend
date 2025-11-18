@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.auth_app.serializers.user_update_serializer import UserUpdateSerializer
-from apps.auth_app.utils.user_update import update_user_profile_completion_status, get_user_update_response_data
+from apps.auth_app.utils.user_update import get_user_update_response_data
 
 
 class UserUpdateView(APIView):
@@ -26,9 +26,7 @@ class UserUpdateView(APIView):
         # Refrescar el usuario desde la BD
         user.refresh_from_db()
 
-        # Actualizar estado de completitud del perfil
-        update_user_profile_completion_status(user)
-        
+       
         def patch(self, request):
             logger.info("=== USER UPDATE ENDPOINT ===")
             logger.info(f"Usuario autenticado: {request.user.email}")

@@ -17,23 +17,32 @@ class LoginSerializer(serializers.Serializer):
     - Verifica estado de cuenta: permite "activa" e "incompleta", bloquea "inactiva" y "reportada".
     """
 
+    # Campos en orden: reCAPTCHA primero para fail-fast
+    recaptcha_token = serializers.CharField(write_only=True, required=True, allow_blank=False)
     email = serializers.EmailField()
     contrasena = serializers.CharField(write_only=True)
-    recaptcha_token = serializers.CharField(write_only=True)
 
     def validate_recaptcha_token(self, value):
-        print("Token recibido en login:", value)
+        """
+        Validar reCAPTCHA primero (fail-fast para mejor UX).
+        Maneja específicamente tokens expirados.
+        """
         try:
             success, details = verify_recaptcha_token(value)
-            print("Respuesta de Google en login:", details)
-        except Exception as e:
-            raise serializers.ValidationError(f"Error validando reCAPTCHA: {str(e)}")
+            if not success:
+                error_codes = details.get("error-codes", [])
 
-        if not success:
-            error_codes = details.get("error-codes", [])
-            raise serializers.ValidationError(f"reCAPTCHA inválido. Códigos: {error_codes}")
+                # Mensaje específico para token expirado
+                if "timeout-or-duplicate" in error_codes:
+                    raise serializers.ValidationError(
+                        "El reCAPTCHA ha expirado. Por favor, completa el reCAPTCHA nuevamente."
+                    )
 
-        return value
+                # Otros errores de reCAPTCHA
+                raise serializers.ValidationError(f"reCAPTCHA inválido. Códigos: {error_codes}")
+            return value
+        except RuntimeError as e:
+            raise serializers.ValidationError(str(e))
 
     def validate(self, attrs):
         email = attrs.get("email")

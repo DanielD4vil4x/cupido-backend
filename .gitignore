@@ -2,7 +2,7 @@
 __pycache__/
 *.py[cod]
 *$py.class
-
+./media
 # C extensions
 *.so
 
@@ -141,3 +141,5 @@ dmypy.json
 Thumbs.db
 PROJECT_REVIEW.md
 /apps/auth_app/migrations
+/apps/preferences_app/migrations
+/apps/profile_app/migrations

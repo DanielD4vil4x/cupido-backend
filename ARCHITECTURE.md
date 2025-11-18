@@ -20,7 +20,7 @@ This is a Django-based backend API for the cUPido dating application, targeted a
 ### Other Apps
 - **chat_app**: Placeholder for chat functionality (not implemented)
 - **match_app**: Placeholder for matching algorithms (not implemented)
-- **profile_app**: Placeholder for profile management (in course)
+- **profile_app**: Basic profile management and image upload functionality.
 - **reports_app**: Placeholder for reporting features (not implemented)
 - **preferences_app**: Placeholder for featuring of preferences (in course)
 
@@ -34,8 +34,10 @@ cupido-backend/
 │   ├── auth_app/          # Authentication module
 │   ├── chat_app/          # Chat functionality (placeholder)
 │   ├── match_app/         # Matching system (placeholder)
-│   ├── profile_app/       # Profile management (placeholder)
-│   ├── reports_app/       # Reporting features (placeholder)
+│   ├─ profile_app/
+│   │   └─ subapps/         # Sub-applications for profile
+│   │       └─ imageupload/ # Image management
+│   ├─ reports_app/         # Reporting features (placeholder)
 │   └── preferences_app/     # Preferences funcionality (placeholder)
 ├── manage.py
 ├── requirements.txt
@@ -158,6 +160,11 @@ cupido-backend/
 | POST | `/api/auth/password-reset-confirm/` | Confirm password reset | No |
 | POST | `/api/auth/deactivate/` | Deactivate account | Yes |
 | PATCH | `/api/auth/user-update/` | Update current user info | Yes |
+| GET | `/api/v1/profile/photos/` | List all user images | Yes |
+| POST | `/api/v1/profile/photos/` | Upload a new image | Yes |
+| GET | `/api/v1/profile/photos/{id}/` | Retrieve a specific image | Yes |
+| PATCH | `/api/v1/profile/photos/{id}/` | Update a specific image | Yes |
+| DELETE | `/api/v1/profile/photos/{id}/` | Delete a specific image | Yes |
 
 ### cURL Examples
 

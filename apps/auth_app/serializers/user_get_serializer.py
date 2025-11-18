@@ -9,7 +9,6 @@ class UserGetSerializer(serializers.Serializer):
     Serializa todos los campos del perfil de usuario para respuestas GET.
     Este serializer es de solo lectura y devuelve toda la información del usuario autenticado.
     """
-    
     usuario_id = serializers.IntegerField()
     nombres = serializers.CharField()
     apellidos = serializers.CharField()
@@ -20,10 +19,9 @@ class UserGetSerializer(serializers.Serializer):
     fecharegistro = serializers.DateTimeField(allow_null=True)
     estadocuenta = serializers.CharField(allow_null=True, allow_blank=True)
     tyc = serializers.BooleanField(allow_null=True)
-    
-    # Foreign key relations
-    programa_id = serializers.IntegerField(allow_null=True, source='programa.programa_id')
-    ubicacion_id = serializers.IntegerField(allow_null=True, source='ubicacion.ubicacion_id')
+    numerotelefono = serializers.CharField()
+    #programa_id = serializers.IntegerField(allow_null=True, source='programa.programa_id')
+    #ubicacion_id = serializers.IntegerField(allow_null=True, source='ubicacion.ubicacion_id')
     genero_id = serializers.IntegerField(allow_null=True, source='genero.genero_id')
 
 
@@ -44,7 +42,8 @@ def serialize_user_profile(user: Usuario) -> dict:
         "estadocuenta": user.estadocuenta,
         "tyc": user.tyc,
         "genero_id": user.genero.genero_id if user.genero else None,
-        "programa_id": user.programa.programa_id if user.programa else None,
-        "ubicacion_id": user.ubicacion.ubicacion_id if user.ubicacion else None,
+        "numerotelefono": user.numerotelefono,
+        #"programa_id": user.programa.programa_id if user.programa else None,
+        #"ubicacion_id": user.ubicacion.ubicacion_id if user.ubicacion else None,
     }
 
