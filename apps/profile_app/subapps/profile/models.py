@@ -7,7 +7,11 @@ class Perfil(models.Model):
     usuario = models.ForeignKey(Usuario, models.DO_NOTHING, blank=True, null=True)
     programa_academico = models.ForeignKey(Programa, models.DO_NOTHING, blank=True, null=True)
     ubicacion = models.ForeignKey(Ubicacion, models.DO_NOTHING, blank=True, null=True)
+<<<<<<< Updated upstream
     prefencias = models.ForeignKey(Preference, models.DO_NOTHING, blank=True, null=True)
+=======
+    preferencias = models.ForeignKey(Preference, models.DO_NOTHING, blank=True, null=True)
+>>>>>>> Stashed changes
     hobbies = models.CharField(max_length=255,  blank=True, null=True)
     estatura = models.FloatField(blank=True, null=True)
     estado = models.CharField(max_length=50, blank=True, null=True)

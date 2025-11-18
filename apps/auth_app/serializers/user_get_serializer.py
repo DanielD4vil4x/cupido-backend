@@ -20,8 +20,13 @@ class UserGetSerializer(serializers.Serializer):
     estadocuenta = serializers.CharField(allow_null=True, allow_blank=True)
     tyc = serializers.BooleanField(allow_null=True)
     numerotelefono = serializers.CharField()
+<<<<<<< Updated upstream
     
     # Foreign key relations
+=======
+    #programa_id = serializers.IntegerField(allow_null=True, source='programa.programa_id')
+    #ubicacion_id = serializers.IntegerField(allow_null=True, source='ubicacion.ubicacion_id')
+>>>>>>> Stashed changes
     genero_id = serializers.IntegerField(allow_null=True, source='genero.genero_id')
 
 
@@ -43,5 +48,10 @@ def serialize_user_profile(user: Usuario) -> dict:
         "tyc": user.tyc,
         "genero_id": user.genero.genero_id if user.genero else None,
         "numerotelefono": user.numerotelefono,
+<<<<<<< Updated upstream
+=======
+        #"programa_id": user.programa.programa_id if user.programa else None,
+        #"ubicacion_id": user.ubicacion.ubicacion_id if user.ubicacion else None,
+>>>>>>> Stashed changes
     }
 

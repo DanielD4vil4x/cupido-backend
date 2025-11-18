@@ -16,4 +16,8 @@ class ProgramaSerializer(serializers.ModelSerializer):
 class UbicacionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ubicacion
+<<<<<<< Updated upstream
         fields = '__all__'
+=======
+        fields = '__all__'
+>>>>>>> Stashed changes

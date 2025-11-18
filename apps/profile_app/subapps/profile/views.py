@@ -67,4 +67,8 @@ class ProgramaViewSet(viewsets.ReadOnlyModelViewSet):
 
 class UbicacionViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ubicacion.objects.all()
+<<<<<<< Updated upstream
     serializer_class = UbicacionSerializer
+=======
+    serializer_class = UbicacionSerializer
+>>>>>>> Stashed changes
