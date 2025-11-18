@@ -22,10 +22,8 @@ class LoginSerializer(serializers.Serializer):
     recaptcha_token = serializers.CharField(write_only=True)
 
     def validate_recaptcha_token(self, value):
-        print("Token recibido en login:", value)
         try:
             success, details = verify_recaptcha_token(value)
-            print("Respuesta de Google en login:", details)
         except Exception as e:
             raise serializers.ValidationError(f"Error validando reCAPTCHA: {str(e)}")
 

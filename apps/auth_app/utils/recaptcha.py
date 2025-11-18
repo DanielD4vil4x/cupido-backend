@@ -4,8 +4,11 @@ Verifica tokens reCAPTCHA v2 con Google.
 """
 
 import requests
+import logging
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
+
+logger = logging.getLogger(__name__)
 
 
 def verify_recaptcha_token(token: str) -> tuple[bool, dict]:
@@ -18,10 +21,6 @@ def verify_recaptcha_token(token: str) -> tuple[bool, dict]:
     Returns:
         tuple: (success: bool, details: dict)
     """
-    if settings.DEBUG:
-        print("🤖 [DEBUG] Saltando la verificación de reCAPTCHA. Devolviendo éxito (True) automáticamente.")
-        return True, {"detail": "Verification skipped in DEBUG mode."}
-        
     secret_key = getattr(settings, "RECAPTCHA_SECRET_KEY", None)
     if not secret_key:
         raise ImproperlyConfigured("RECAPTCHA_SECRET_KEY no está configurada en settings.")
@@ -36,11 +35,15 @@ def verify_recaptcha_token(token: str) -> tuple[bool, dict]:
         )
         response.raise_for_status()
         result = response.json()
-        return result.get("success", False), result
+        success = result.get("success", False)
+
+        if success:
+            logger.info("✅ reCAPTCHA verificado exitosamente")
+        else:
+            logger.warning(f"❌ reCAPTCHA falló: {result.get('error-codes', [])}")
+
+        return success, result
     except requests.RequestException as e:
-        # En desarrollo podrías devolver False y loguear
-        if settings.DEBUG:
-            print("⚠️ Error de conexión con reCAPTCHA:", e)
-            return False, {"error": str(e)}
+        logger.error(f"⚠️ Error de conexión con reCAPTCHA: {e}")
         raise RuntimeError(f"Error al verificar reCAPTCHA: {e}")
 

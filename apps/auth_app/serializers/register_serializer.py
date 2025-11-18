@@ -40,17 +40,15 @@ class RegisterSerializer(serializers.Serializer):
     tyc = serializers.BooleanField()
 
     def validate_recaptcha_token(self, value):
-        print("Token recibido:", value)
         try:
             success, details = verify_recaptcha_token(value)
-            print("Respuesta de Google:", details)
         except Exception as e:
             raise serializers.ValidationError(f"Error validando reCAPTCHA: {str(e)}")
 
         if not success:
             error_codes = details.get("error-codes", [])
             raise serializers.ValidationError(f"reCAPTCHA inválido. Códigos: {error_codes}")
-    
+
         return value
 
     def validate_email(self, value):
