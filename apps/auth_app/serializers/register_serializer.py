@@ -42,11 +42,20 @@ class RegisterSerializer(serializers.Serializer):
     def validate_recaptcha_token(self, value):
         """
         Validar reCAPTCHA (DRF valida en orden de declaración de campos).
+        Maneja específicamente tokens expirados.
         """
         try:
             success, details = verify_recaptcha_token(value)
             if not success:
                 error_codes = details.get("error-codes", [])
+
+                # Mensaje específico para token expirado
+                if "timeout-or-duplicate" in error_codes:
+                    raise serializers.ValidationError(
+                        "El reCAPTCHA ha expirado. Por favor, completa el reCAPTCHA nuevamente."
+                    )
+
+                # Otros errores de reCAPTCHA
                 raise serializers.ValidationError(f"reCAPTCHA inválido. Códigos: {error_codes}")
             return value
         except RuntimeError as e:

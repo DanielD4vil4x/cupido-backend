@@ -55,6 +55,10 @@ def verify_recaptcha_token(token: str) -> tuple[bool, dict]:
             error_codes = result.get("error-codes", [])
             logger.warning(f"reCAPTCHA falló - Códigos de error: {error_codes}")
 
+            # Detectar token expirado específicamente
+            if "timeout-or-duplicate" in error_codes:
+                logger.warning("Token reCAPTCHA expirado - El usuario debe completar reCAPTCHA nuevamente")
+
         return success, result
 
     except requests.Timeout:
