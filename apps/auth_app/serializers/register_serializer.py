@@ -34,22 +34,23 @@ class RegisterSerializer(serializers.Serializer):
     """
 
     # Campos obligatorios
+    recaptcha_token = serializers.CharField(write_only=True, required=True, allow_blank=False)
     email = serializers.EmailField()
     contrasena = serializers.CharField(write_only=True, min_length=8)
-    recaptcha_token = serializers.CharField(write_only=True)
     tyc = serializers.BooleanField()
 
     def validate_recaptcha_token(self, value):
+        """
+        Validar reCAPTCHA (DRF valida en orden de declaración de campos).
+        """
         try:
             success, details = verify_recaptcha_token(value)
-        except Exception as e:
-            raise serializers.ValidationError(f"Error validando reCAPTCHA: {str(e)}")
-
-        if not success:
-            error_codes = details.get("error-codes", [])
-            raise serializers.ValidationError(f"reCAPTCHA inválido. Códigos: {error_codes}")
-
-        return value
+            if not success:
+                error_codes = details.get("error-codes", [])
+                raise serializers.ValidationError(f"reCAPTCHA inválido. Códigos: {error_codes}")
+            return value
+        except RuntimeError as e:
+            raise serializers.ValidationError(str(e))
 
     def validate_email(self, value):
         """
@@ -70,8 +71,6 @@ class RegisterSerializer(serializers.Serializer):
         if Usuario.objects.filter(email=value).exists():
             raise serializers.ValidationError("El correo ya se encuentra registrado.")
         return value
-
-
 
     def validate_contrasena(self, value):
         """
