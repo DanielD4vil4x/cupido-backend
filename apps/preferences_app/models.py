@@ -1,6 +1,7 @@
 from django.db import models
 from apps.auth_app.models import Usuario
 
+#modelo de la tabla Preferencia
 class Preference(models.Model):
 
     id = models.AutoField(primary_key=True)
@@ -17,7 +18,7 @@ class Preference(models.Model):
     def __str__(self):
         return f"Preferencias #{self.id}"
 
-    
+#modelo de la tabla filtro 
 class Filter(models.Model):
     id = models.AutoField(primary_key=True)
     usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='filters', default=1)
