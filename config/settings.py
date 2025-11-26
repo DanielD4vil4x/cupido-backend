@@ -114,11 +114,14 @@ WSGI_APPLICATION = "config.wsgi.application"
 # Database
 # -------------------------
 DATABASES = {
-    "default": dj_database_url.config(
-        default=os.getenv("DATABASE_URL"),
-        conn_max_age=600,
-        ssl_require=False,
-    )
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "cupid",
+        "USER": "root",
+        "PASSWORD": "iazfqaey4gzsqeij", 
+        "HOST": "190.90.114.214",
+        "PORT": "5433",
+    }
 }
 
 # -------------------------
