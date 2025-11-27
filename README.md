@@ -49,13 +49,13 @@ git clone https://github.com/cUPido-App/cupido-backend.git
 cd cupido-backend
 python -m venv venv
 source venv/bin/activate  # En Linux / Mac
-venv\Scripts\activate     # En Windows
+source venv\scripts\activate     # En Windows
 pip install -r requirements.txt 
 ```
 
 ---
 # IMPORTANTE ANTES DE EJECUTAR:
-### Asegúrate de tener un archivo .env con una base de datos limpia
+### Asegúrate de tener un archivo .env bien configurado, con una base de datos limpia y activa en postgres, además de tener redis corriendo con docker
 
 ### Revisar migraciones
 ```bash
@@ -68,6 +68,13 @@ python manage.py makemigrations
 # Aplicar las migraciones a la base de datos
 python manage.py migrate
 ```
+# En caso de error ejecutar: (y las que hagan falta)
+python manage.py makemigrations auth_app
+python manage.py makemigrations preferences_app
+python manage.py makemigrations profile_app
+python manage.py migrate auth_app
+python manage.py migrate preferences_app
+python manage.py migrate profile_app
 
 ---
 ### Abrir la base de datos en editor
