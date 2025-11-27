@@ -47,6 +47,14 @@ class PasswordResetRequestSerializer(serializers.Serializer):
         """
         email = self.validated_data["email"]
 
+        # Verificar si el usuario existe antes de enviar nada
+        try:
+            Usuario.objects.get(email=email)
+        except Usuario.DoesNotExist:
+            # Si no existe, no hacemos nada, pero retornamos éxito para no revelar información
+            logger.info(f"Solicitud de recuperación para email no existente: {email}")
+            return
+
         # Generar token único (usamos el mismo generador de códigos)
         from apps.auth_app.utils.codes import generate_verification_code
         reset_token = generate_verification_code(email, ttl=RESET_TOKEN_TTL)
