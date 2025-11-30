@@ -143,3 +143,4 @@ PROJECT_REVIEW.md
 /apps/auth_app/migrations
 /apps/preferences_app/migrations
 /apps/profile_app/migrations
+/apps/chat_app/migrations
