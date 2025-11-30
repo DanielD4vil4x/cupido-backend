@@ -1,90 +1,72 @@
-from sqlalchemy import create_engine, Column, Integer, String
-from sqlalchemy.orm import sessionmaker, declarative_base
+# apps/match_app/utils.py
+from typing import List, Optional, Set
+
+from apps.profile_app.subapps.profile.models import Perfil
+from apps.preferences_app.models import Preference
 
 
-
-# CONFIG POSTGRES
-
-DATABASE_URL = "postgresql+psycopg2://root:iazfqaey4gzsqeij@190.90.114.214:5433/cupid"
-
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(bind=engine)
-Base = declarative_base()
-
-
-# MODELO PERFIL
-
-class Perfil(Base):
-    __tablename__ = "perfil"
-
-    perfil_id = Column(Integer, primary_key=True)
-    hobbies = Column(String)
-    estatura = Column(Integer)
-    estado = Column(String)
-    likes = Column(Integer)
-    fecharegistro = Column(String)
-    preferencias_id = Column(Integer)
-    programa_academico_id = Column(Integer)
-    ubicacion_id = Column(Integer)
-    usuario_id = Column(Integer)
-
-class Preference(Base):
-    __tablename__ = "preferences_app_preference"
-
-    id = Column(Integer, primary_key=True)
-
-    rango_edad_min = Column(Integer)
-    rango_edad_max = Column(Integer)
-    rango_estatura_min = Column(Integer)
-    rango_estatura_max = Column(Integer)
-    ubicacion = Column(String(100))
-    genero_preferido = Column(String(50))
-    hobbies_preferidos = Column(String) 
-    fecha_creacion = Column(String)     
-
-    
-
-
-#  FUNCIÓN 
-
-def obtener_perfil(user_id: int):
-    db = SessionLocal()
-    try:
-        perfil = db.query(Perfil).filter(Perfil.usuario_id == user_id).first()
-        return perfil
-    finally:
-        db.close()
-
-def obtener_preferencias_por_perfil(perfil: Perfil):
-    db = SessionLocal()
-    try:
-        if perfil.preferencias_id is None:
-            return None
-
-        preferencias = (
-            db.query(Preference)
-            .filter(Preference.id == perfil.preferencias_id)
-            .first()
-        )
-        return preferencias
-    finally:
-        db.close()
-
-def normalizar_hobbies(cadena: str) -> set[str]:
+# Helpers
+def normalizar_hobbies(cadena: Optional[str]) -> Set[str]:
+    """
+    Recibe una cadena tipo: "cine, gym, videojuegos"
+    y devuelve un set normalizado en minúsculas.
+    """
     if not cadena:
         return set()
     return {h.strip().lower() for h in cadena.split(",") if h.strip()}
 
+
+# ===============================
+# Obtener perfil y preferencias
+# ===============================
+
+def obtener_perfil(user_id: int) -> Optional[Perfil]:
+    """
+    Devuelve el Perfil asociado a un usuario_id (campo usuario_id en la tabla).
+    """
+    return Perfil.objects.filter(usuario_id=user_id).first()
+
+
+def obtener_preferencias_por_perfil(perfil: Perfil) -> Optional[Preference]:
+    """
+    Usa perfil.preferencias_id para buscar el registro en preferences_app_preference.
+    (OJO: el campo correcto es 'preferencias', por eso Django crea 'preferencias_id').
+    """
+    # corregido: estaba escrito 'prefencias_id'
+    pref_id = getattr(perfil, "preferencias_id", None)
+
+    if not pref_id:
+        return None
+
+    return Preference.objects.filter(id=pref_id).first()
+
+
+def obtener_otros_perfiles(perfil: Perfil):
+    """
+    Devuelve un queryset con todos los demás perfiles (distinto usuario_id).
+    """
+    return Perfil.objects.exclude(usuario_id=perfil.usuario_id)
+
+
+# ===============================
+# Validación de compatibilidad
+# ===============================
+
 def perfil_cumple_preferencias(perfil: Perfil, preferencias: Preference) -> bool:
-    
+    """
+    Devuelve True si el perfil cumple las preferencias mínimas.
+    """
+
+    # 1) Rango de estatura
     if preferencias.rango_estatura_min is not None and perfil.estatura is not None:
-        if perfil.estatura < preferencias.rango_estatura_min:
+        if perfil.estatura <= preferencias.rango_estatura_min:
             return False
 
     if preferencias.rango_estatura_max is not None and perfil.estatura is not None:
-        if perfil.estatura > preferencias.rango_estatura_max:
+        if perfil.estatura >= preferencias.rango_estatura_max:
             return False
 
+    # 2) Hobbies: si hay hobbies preferidos, al menos 1 en común
     pref_hobbies = normalizar_hobbies(preferencias.hobbies_preferidos)
     perfil_hobbies = normalizar_hobbies(perfil.hobbies)
 
@@ -92,34 +74,35 @@ def perfil_cumple_preferencias(perfil: Perfil, preferencias: Preference) -> bool
         if not (pref_hobbies & perfil_hobbies):
             return False
 
-    # 3) Filtro por ubicación (aquí depende de cómo resuelvas ubicacion_id)
-    # Si tienes una tabla Ubicacion, normalmente harías un join o una consulta extra.
-    # Si no, puedes de momento omitir o adaptarlo si ya tienes el nombre en Perfil.
-    # Ejemplo hipotético si tu Perfil tuviera 'ubicacion' como String:
-    #
-    # if preferencias.ubicacion and perfil.ubicacion:
-    #     if preferencias.ubicacion.lower() != perfil.ubicacion.lower():
-    #         return False
+    # 3) Género / edad
+    # En tu modelo Perfil no existen directamente 'genero' ni 'edad',
+    # así que usamos getattr para evitar errores si no están.
+    genero_perfil = getattr(perfil, "genero", None)
+    edad_perfil = getattr(perfil, "edad", None)
 
-    # 4) Filtro por genero / edad -> depende de dónde tengas esos datos
-    # (usuario, persona, etc.). Lo dejo como idea:
-    #
-    # if preferencias.genero_preferido and perfil.genero:
-    #     if perfil.genero != preferencias.genero_preferido:
-    #         return False
-    
-    # if preferencias.rango_edad_min and perfil.edad:
-    #     if perfil.edad < preferencias.rango_edad_min:
-    #         return False
-    
-    # if preferencias.rango_edad_max and perfil.edad:
-    #     if perfil.edad > preferencias.rango_edad_max:
-    #         return False
+    if preferencias.genero_preferido and genero_perfil:
+        if genero_perfil != preferencias.genero_preferido:
+            return False
+
+    if preferencias.rango_edad_min is not None and edad_perfil is not None:
+        if edad_perfil < preferencias.rango_edad_min:
+            return False
+
+    if preferencias.rango_edad_max is not None and edad_perfil is not None:
+        if edad_perfil > preferencias.rango_edad_max:
+            return False
 
     return True
 
 
+# ===============================
+# Score de compatibilidad
+# ===============================
+
 def calcular_score(preferencias: Preference, perfil: Perfil) -> float:
+    """
+    Calcula un puntaje de compatibilidad simple.
+    """
     score = 0.0
 
     # Hobbies en común
@@ -129,74 +112,69 @@ def calcular_score(preferencias: Preference, perfil: Perfil) -> float:
     comunes = pref_hobbies & perfil_hobbies
     score += 1 * len(comunes)
 
-    # egtatura
-    if preferencias.rango_estatura_max is not None and perfil.estatura is not None:
-        if perfil.estatura <= preferencias.rango_estatura_max:
-            if preferencias.rango_estatura_min is not None and perfil.estatura is not None:
-                if perfil.estatura >= preferencias.rango_estatura_min:
-                    score += 1
-    
-    # edad
-    # if preferencias.rango_edad_max is not None and perfil.edad is not None:
-    #     if perfil.edad <= preferencias.rango_edad_max:
-    #         if preferencias.rango_edad_min is not None and perfil.edad is not None:
-    #             if perfil.edad >= preferencias.rango_edad_min:
-    #                 score += 1
-    
-    
-    # genero y sus 39 tipos de gey
-    # if preferencias.genero_preferido and perfil.genero:
-    #     if perfil.genero == preferencias.genero_preferido:
-    #         score += 1
+    # Estatura dentro de rango suma 1
+    if (
+        preferencias.rango_estatura_min is not None
+        and preferencias.rango_estatura_max is not None
+        and perfil.estatura is not None
+    ):
+        if preferencias.rango_estatura_min <= perfil.estatura <= preferencias.rango_estatura_max:
+            score += 1
 
-        
+    # Edad dentro de rango suma 1 (si existe edad en el perfil)
+    edad_perfil = getattr(perfil, "edad", None)
+    if (
+        preferencias.rango_edad_min is not None
+        and preferencias.rango_edad_max is not None
+        and edad_perfil is not None
+    ):
+        if preferencias.rango_edad_min <= edad_perfil <= preferencias.rango_edad_max:
+            score += 1
+
+    # Género coincide suma 1 (si existe genero en el perfil)
+    genero_perfil = getattr(perfil, "genero", None)
+    if preferencias.genero_preferido and genero_perfil:
+        if genero_perfil == preferencias.genero_preferido:
+            score += 1
+
     return score
 
-def obtener_perfiles_sugeridos(perfil_usuario: Perfil, preferencias: Preference, limite: int = 30):
-    db = SessionLocal()
-    try:
-        # traer perfiles
-        otros = (
-            db.query(Perfil)
-            .filter(Perfil.usuario_id != perfil_usuario.usuario_id)
-            .all()
-        )
 
-        compatibles = []
+# ===============================
+# Perfiles sugeridos (feed)
+# ===============================
 
-        for p in otros:
-            if perfil_cumple_preferencias(p, preferencias):
-                score = calcular_score(preferencias, p)
+def obtener_perfiles_sugeridos(
+    perfil_usuario: Perfil,
+    preferencias: Preference,
+    limite: int = 30,
+    con_score: bool = False,  # ← NUEVO
+):
+    """
+    Devuelve perfiles sugeridos filtrados por preferencias y ordenados por score.
+
+    - Si con_score=False (por defecto): devuelve [Perfil, Perfil, ...]
+    - Si con_score=True: devuelve [(Perfil, score), (Perfil, score), ...]
+    """
+    otros = obtener_otros_perfiles(perfil_usuario)
+
+    compatibles = []
+    for p in otros:
+        if perfil_cumple_preferencias(p, preferencias):
+            score = calcular_score(preferencias, p)
+            compatibles.append((p, score))
+        else:
+            score = calcular_score(preferencias, p)
+            if score >= 1:
                 compatibles.append((p, score))
-            else:
-                score = calcular_score(preferencias, p)
-                if score >= 1:
-                    compatibles.append((p, score))
-            
 
-        # ordernar
-        compatibles.sort(key=lambda x: x[1], reverse=True)
+    # ordenar por score desc
+    compatibles.sort(key=lambda x: x[1], reverse=True)
 
-        # 3) Devolver solo los perfiles 
-        perfiles_ordenados = [p for p, _ in compatibles]
-        return perfiles_ordenados[:limite]
-    finally:
-        db.close()
+    if con_score:
+        # devolvemos (perfil, score)
+        return compatibles[:limite]
 
-
-
-
-
-
-
-
-
-# user_id = 2
-
-# perfil = obtener_perfil(user_id)
-# preferencias = obtener_preferencias_por_perfil(perfil)
-
-# perfil = obtener_perfil(user_id)
-# preferencias = obtener_preferencias_por_perfil(perfil)
-# perfiles_sugeridos = obtener_perfiles_sugeridos(perfil, preferencias, limite=30)
-
+    # devolvemos solo los perfiles
+    perfiles_ordenados = [p for p, _ in compatibles]
+    return perfiles_ordenados[:limite]
