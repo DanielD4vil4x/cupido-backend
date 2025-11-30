@@ -77,6 +77,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
+    "storages",  # Feature: imageUpload - django-storages para MinIO/S3
 ]
 
 # -------------------------
@@ -162,6 +163,59 @@ STATIC_URL = "static/"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# -------------------------
+# Feature: imageUpload - MinIO / S3 Object Storage Configuration
+# -------------------------
+# Lógica de negocio: Usamos MinIO como storage de objetos S3-compatible para
+# almacenar imágenes de perfil de forma escalable y portable (dev/prod).
+# En producción: MINIO_ENDPOINT=http://190.90.114.214:9000
+
+MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT", "")
+MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY", "")
+MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY", "")
+MINIO_BUCKET_NAME = os.getenv("MINIO_BUCKET_NAME", "multimediacupido")
+MINIO_USE_SSL = os.getenv("MINIO_USE_SSL", "False").lower() in ("true", "1", "yes")
+MINIO_REGION = os.getenv("MINIO_REGION", "")
+MINIO_PUBLIC_URL = os.getenv("MINIO_PUBLIC_URL", MINIO_ENDPOINT)
+
+# Configurar django-storages solo si MinIO está configurado
+if MINIO_ENDPOINT and MINIO_ACCESS_KEY and MINIO_SECRET_KEY:
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+            "OPTIONS": {
+                "access_key": MINIO_ACCESS_KEY,
+                "secret_key": MINIO_SECRET_KEY,
+                "bucket_name": MINIO_BUCKET_NAME,
+                "endpoint_url": MINIO_ENDPOINT,
+                "region_name": MINIO_REGION if MINIO_REGION else None,
+                "use_ssl": MINIO_USE_SSL,
+                "file_overwrite": False,
+                "default_acl": None,
+                "querystring_auth": False,
+                "addressing_style": "path",
+                "signature_version": "s3v4",
+            },
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+    # Actualizar MEDIA_URL para apuntar a MinIO
+    MEDIA_URL = f"{MINIO_PUBLIC_URL}/{MINIO_BUCKET_NAME}/"
+
+# Configuración de límites de fotos
+PHOTO_MAX_UPLOAD_SIZE = int(os.getenv('PHOTO_MAX_UPLOAD_SIZE', 400 * 1024))  # 400KB
+PHOTO_MAX_FILES = int(os.getenv('PHOTO_MAX_FILES', 3))
+
+# -------------------------
+# Feature: imageUpload - Sightengine (Moderación de Contenido)
+# -------------------------
+# Detecta contenido inapropiado: desnudez, violencia, armas, drogas
+# Si el servicio falla, la imagen se acepta (fail-open)
+SIGHTENGINE_API_USER = os.getenv('SIGHTENGINE_API_USER', '')
+SIGHTENGINE_API_SECRET = os.getenv('SIGHTENGINE_API_SECRET', '')
 
 # -------------------------
 # REST Framework
