@@ -1,6 +1,16 @@
-# apps/chat_app/urls.py
 from django.urls import path
+from . import views
 
 urlpatterns = [
-    # Endpoints de chat pendientes de implementación
+    # API Endpoint para obtener el historial:
+    # GET /api/v1/chat/1/mensajes/
+    path('<int:chat_id>/mensajes/', views.obtener_mensajes_chat, name='obtener-mensajes'),
+    # API Endpoint para enviar mensajes (fallback cuando WebSocket no está disponible):
+    # POST /api/v1/chat/1/enviar/
+    path('<int:chat_id>/enviar/', views.enviar_mensaje, name='enviar-mensaje'),
+    path('<int:chat_id>/vaciar/', views.vaciar_chat, name='vaciar-chat'),
+    
+    # (Aquí también pondremos la lógica de bloquear/reportar después)
+
+    path('', views.obtener_lista_chats, name='obtener_lista_chats'),
 ]

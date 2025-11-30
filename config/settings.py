@@ -74,6 +74,8 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
+    "channels",
+    "daphne",
 ]
 
 # -------------------------
@@ -112,6 +114,9 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "config.wsgi.application"
+
+#Aplication ASGI que usara CHANNELS
+ASGI_APPLICATION = 'config.asgi.application'
 
 # -------------------------
 # Database
@@ -225,4 +230,13 @@ LOGGING = {
     "disable_existing_loggers": False,
     "handlers": {"console": {"class": "logging.StreamHandler"}},
     "root": {"handlers": ["console"], "level": "INFO"},
+}
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [os.getenv('REDIS_URL', default='redis://localhost:6379/0')],
+        },
+    },
 }
