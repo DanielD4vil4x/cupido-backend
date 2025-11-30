@@ -55,6 +55,9 @@ CORS_ALLOW_CREDENTIALS = True
 # Applications
 # -------------------------
 INSTALLED_APPS = [
+    # web Socket for Chat Services
+    "channels",
+    "daphne",
     # Django core apps
     "django.contrib.admin",
     "django.contrib.auth",
@@ -74,8 +77,6 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
-    "channels",
-    "daphne",
 ]
 
 # -------------------------
