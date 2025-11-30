@@ -236,7 +236,6 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            # Usamos la misma URL de Redis que ya tienes en tu .env
             "hosts": [os.getenv('REDIS_URL', default='redis://localhost:6379/0')],
         },
     },
