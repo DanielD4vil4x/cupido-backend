@@ -23,7 +23,7 @@ class Perfil(Base):
     estado = Column(String)
     likes = Column(Integer)
     fecharegistro = Column(String)
-    preferencias_id = Column("prefencias_id", Integer)
+    preferencias_id = Column(Integer)
     programa_academico_id = Column(Integer)
     ubicacion_id = Column(Integer)
     usuario_id = Column(Integer)

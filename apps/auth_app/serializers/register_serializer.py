@@ -128,4 +128,3 @@ class RegisterSerializer(serializers.Serializer):
         # añadir un flag temporal opcional
         data["_from_registration"] = True
         return data
-

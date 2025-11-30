@@ -16,7 +16,7 @@ def mostrar_perfil(perfil):
 
 
 if __name__ == "__main__":
-    user_id = 2
+    user_id = 4
 
     perfil = obtener_perfil(user_id)
     if not perfil:
