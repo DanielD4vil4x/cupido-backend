@@ -43,6 +43,7 @@ class VerifyEmailView(APIView):
                 password=registration_payload.get("password"),  # ya hasheada
                 numerotelefono="0000000000",  # Valor dummy
                 tyc=registration_payload.get("tyc", True),
+                firma=registration_payload.get("firma"),
                 estadocuenta=registration_payload.get("estadocuenta", "1"),
                 fecharegistro=registration_payload.get("fecharegistro"),
                 fechanacimiento="2000-01-01",  # Valor dummy,

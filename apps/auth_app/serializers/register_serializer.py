@@ -23,6 +23,7 @@ class RegisterSerializer(serializers.Serializer):
       - contrasena (con validaciones de seguridad)
       - recaptcha_token
       - tyc (términos y condiciones)
+      - firma (firma del usuario)
 
     Requisitos realizados aquí:
       * Validación token reCaptcha
@@ -38,6 +39,7 @@ class RegisterSerializer(serializers.Serializer):
     email = serializers.EmailField()
     contrasena = serializers.CharField(write_only=True, min_length=8)
     tyc = serializers.BooleanField()
+    firma = serializers.CharField(required=True, allow_blank=False)
 
     def validate_recaptcha_token(self, value):
         """
