@@ -9,8 +9,17 @@ from channels.security.websocket import AllowedHostsOriginValidator
 
 from apps.chat_app.middleware import JwtAuthMiddleware
 import apps.chat_app.routing
+
+# 🔥 IMPORTANTE: añadir rutas de notificación
+import apps.notificacion_app.routing
+
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 
+# ⚡ UNIMOS LAS RUTAS WEBSOCKET DEL CHAT + NOTIFICACIONES
+websocket_urlpatterns = (
+    apps.chat_app.routing.websocket_urlpatterns +
+    apps.notificacion_app.routing.websocket_urlpatterns
+)
 
 #application = get_asgi_application()
 
@@ -22,10 +31,10 @@ application = ProtocolTypeRouter({
     # Si el tráfico es WebSocket, envíalo a la "oficina del chat"
     "websocket": AllowedHostsOriginValidator(
         
-        JwtAuthMiddleware( # Esto averigua QUIÉN está chateando
+        JwtAuthMiddleware( # Esto averigua QUIÉN está chateando (y también quién recibe notificaciones)
             URLRouter(
-                # Busca la dirección específica en tu app de chat
-                apps.chat_app.routing.websocket_urlpatterns
+                # Busca la dirección específica en tu app de chat + notificaciones
+                websocket_urlpatterns
             )
         )
     ),
@@ -47,14 +56,13 @@ application = ProtocolTypeRouter({
 
 # ASGI application con soporte para HTTP y WebSocket
 #application = ProtocolTypeRouter({
-    # HTTP requests → Django normal
-    #"http": get_asgi_application(),
-
-    # WebSocket requests → (cuando los actives)
-    # "websocket": AllowedHostsOriginValidator(
-    #     AuthMiddlewareStack(
-    #         URLRouter(websocket_urlpatterns)
-    #     )
-    # ),
+#    # HTTP requests → Django normal
+#    "http": get_asgi_application(),
+#
+#    # WebSocket requests → (cuando los actives)
+#    # "websocket": AllowedHostsOriginValidator(
+#    #     AuthMiddlewareStack(
+#    #         URLRouter(websocket_urlpatterns)
+#    #     )
+#    # ),
 #})
-
