@@ -9,7 +9,7 @@ from apps.profile_app.subapps.profile.models import Perfil
 from apps.preferences_app.models import Preference
 from apps.auth_app.models import Usuario
 
-from .utils2 import (
+from .utils import (
     obtener_perfil,
     obtener_preferencias_por_perfil,
     obtener_perfiles_sugeridos,
