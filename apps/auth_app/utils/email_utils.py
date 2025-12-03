@@ -43,7 +43,7 @@ def send_email(subject: str, to_email: str, html_content: str, text_fallback: st
 
 
 def send_verification_email(to_email: str, code: str) -> bool:
-    subject = "Verifica tu cuenta - cUPido"
+    subject = "Verificar tu cuenta para empezar a flechar"
 
     body_lines = [
         f"Tu código de verificación es: <strong>{code}</strong>",
@@ -105,7 +105,7 @@ def build_email(title: str, body_lines: list[str]) -> str:
 
                     <tr>
                         <td>
-                            <img src="https://i.postimg.cc/htWQx7q5/logo-Fix.webp" alt="Banner" width="100%"
+                            <img src="https://i.postimg.cc/28hpQGnw/Pareja-Copas.png" alt="Banner" width="100%"
                                  style="display:block; max-height:220px; object-fit:cover;">
                         </td>
                     </tr>
