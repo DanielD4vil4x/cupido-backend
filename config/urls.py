@@ -22,6 +22,7 @@ def root_view(request):
             "chat": "/api/v1/chat/",
             "preferences": "/api/v1/preferences/preferences/",  
             "filtros": "/api/v1/preferences/filters/",
+            "notificaciones": "/api/v1/notificaciones/",
         }
     })
 
@@ -40,7 +41,8 @@ urlpatterns = [
     path("api/v1/reports/", include(("apps.reports_app.urls", "reports_app"), namespace="reports")),
     path("api/v1/chat/", include(("apps.chat_app.urls", "chat_app"), namespace="chat")),
     path("api/v1/preferences/", include(("apps.preferences_app.urls", "preferences_app"), namespace="preferences")),
-    
+    path("api/v1/notificaciones/", include(("apps.notificacion_app.urls", "notificacion_app"), namespace="notificaciones")),
+
 
     #Documentación de API
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
