@@ -23,9 +23,36 @@ class MatchRecommendationsView(APIView):
 
     permission_classes = [IsAuthenticated]
 
+    def get_ubicacion_str(self, perfil: Perfil):
+        """
+        Devuelve la ubicación como texto:
+
+        - Si el FK ubicacion tiene un campo nombre/ciudad, lo usa.
+        - Si no, mapea por ubicacion_id:
+            1 -> Pamplona
+            2 -> Cúcuta
+        """
+        # 1) Intentar leer del objeto FK (si existe y tiene nombre/ciudad)
+        ubicacion_obj = getattr(perfil, "ubicacion", None)
+        if ubicacion_obj is not None:
+            nombre = getattr(ubicacion_obj, "nombre", None) or getattr(
+                ubicacion_obj, "ciudad", None
+            )
+            if nombre:
+                return nombre
+
+        # 2) Fallback por id
+        ubi_id = getattr(perfil, "ubicacion_id", None)
+        if ubi_id == 1:
+            return "Pamplona"
+        if ubi_id == 2:
+            return "Cúcuta"
+
+        return None
+
     def get(self, request, *args, **kwargs):
         # 1) Usuario autenticado (JWT)
-        usuario: Usuario = request.user  # instancia de auth_app.Usuario
+        usuario: Usuario = request.user
 
         # 2) Perfil asociado a ese usuario
         perfil_usuario = obtener_perfil(usuario.usuario_id)
@@ -60,14 +87,7 @@ class MatchRecommendationsView(APIView):
 
         usuario_principal = usuarios_map.get(perfil_usuario.usuario_id)
 
-        # ===== info del usuario principal =====
-        # ubicacion del perfil (si es FK)
-        ubicacion_obj = getattr(perfil_usuario, "ubicacion", None)
-        ubicacion_nombre = None
-        if ubicacion_obj is not None:
-            # ajusta "nombre" si tu modelo la llama diferente
-            ubicacion_nombre = getattr(ubicacion_obj, "nombre", str(ubicacion_obj))
-
+        # Info del usuario principal
         user_info = {
             "usuario_id": perfil_usuario.usuario_id,
             "perfil_id": perfil_usuario.perfil_id,
@@ -77,15 +97,17 @@ class MatchRecommendationsView(APIView):
             "apellido": getattr(usuario_principal, "apellidos", None)
             if usuario_principal
             else None,
+            # descripción viene de TABLA USUARIO
+            "descripcion": getattr(usuario_principal, "descripcion", None)
+            if usuario_principal
+            else None,
             "hobbies": perfil_usuario.hobbies,
-            "estatura": perfil_usuario.estatura,
-            # NUEVO: descripción, edad y ubicación
-            "descripcion": getattr(perfil_usuario, "descripcion", None),
+            "estatura": perfil_usuario.estatura,  # en metros para mostrar
             "edad": getattr(perfil_usuario, "edad", None),
-            "ubicacion": ubicacion_nombre,
+            "ubicacion": self.get_ubicacion_str(perfil_usuario),
         }
 
-        # ===== info de las preferencias del usuario =====
+        # Info de las preferencias del usuario principal
         preferences_info = {
             "hobbies_preferidos": preferencias.hobbies_preferidos,
             "rango_edad_min": preferencias.rango_edad_min,
@@ -96,16 +118,10 @@ class MatchRecommendationsView(APIView):
             "genero_preferido": preferencias.genero_preferido,
         }
 
-        # ===== results: perfiles recomendados =====
+        # 6) Armar results: perfil recomendado + datos + score
         results = []
         for perfil, score in compatibles:
             u = usuarios_map.get(perfil.usuario_id)
-
-            # ubicacion del recomendado
-            ubicacion_obj = getattr(perfil, "ubicacion", None)
-            ubicacion_nombre = None
-            if ubicacion_obj is not None:
-                ubicacion_nombre = getattr(ubicacion_obj, "nombre", str(ubicacion_obj))
 
             results.append(
                 {
@@ -113,13 +129,13 @@ class MatchRecommendationsView(APIView):
                     "usuario_id": perfil.usuario_id,
                     "nombre": getattr(u, "nombres", None) if u else None,
                     "apellido": getattr(u, "apellidos", None) if u else None,
+                    # descripción también desde TABLA USUARIO
+                    "descripcion": getattr(u, "descripcion", None) if u else None,
                     "hobbies": perfil.hobbies,
-                    "estatura": perfil.estatura,
-                    "estado": perfil.estado,
-                    # NUEVO:
-                    "descripcion": getattr(perfil, "descripcion", None),
+                    "estatura": perfil.estatura,  # en metros para mostrar
                     "edad": getattr(perfil, "edad", None),
-                    "ubicacion": ubicacion_nombre,
+                    "ubicacion": self.get_ubicacion_str(perfil),
+                    "estado": perfil.estado,
                     "score": score,
                 }
             )
@@ -132,6 +148,3 @@ class MatchRecommendationsView(APIView):
             },
             status=status.HTTP_200_OK,
         )
-
-
-
