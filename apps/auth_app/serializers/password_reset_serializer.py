@@ -65,7 +65,7 @@ class PasswordResetRequestSerializer(serializers.Serializer):
         set_json(redis_key, {"email": email, "used": False}, ttl=RESET_TOKEN_TTL)
 
         # Construir enlace de restablecimiento
-        frontend_url = settings.FRONTEND_URL[0] if settings.FRONTEND_URL else "https://frontend.cupidocol.com"
+        frontend_url = settings.FRONTEND_URL[0] if settings.FRONTEND_URL else "https://cupidocol.com/"
         reset_link = f"{frontend_url}reset-password?token={reset_token}"
 
         # Enviar email (si el usuario existe, pero no verificamos aquí)
