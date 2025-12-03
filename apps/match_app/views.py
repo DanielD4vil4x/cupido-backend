@@ -3,13 +3,13 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import IsAuthenticated
 
 from apps.profile_app.subapps.profile.models import Perfil
 from apps.preferences_app.models import Preference
 from apps.auth_app.models import Usuario
 
-from .utils2 import (
+from .utils import (
     obtener_perfil,
     obtener_preferencias_por_perfil,
     obtener_perfiles_sugeridos,
@@ -18,24 +18,16 @@ from .utils2 import (
 
 class MatchRecommendationsView(APIView):
     """
-    Devuelve una lista de perfiles recomendados para el usuario.
-
-    🔹 En desarrollo dejamos AllowAny para no usar JWT.
+    Devuelve una lista de perfiles recomendados para el usuario autenticado.
     """
 
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        # ⚠️ SOLO PARA PRUEBAS: usuario fijo
-        try:
-            usuario = Usuario.objects.get(email="johan.triana21@unipamplona.edu.co")
-        except Usuario.DoesNotExist:
-            return Response(
-                {"detail": "Usuario de pruebas no exist  e."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        # 1) Usuario autenticado (JWT)
+        usuario: Usuario = request.user  # instancia de auth_app.Usuario
 
-        # 1) Perfil del usuario principal
+        # 2) Perfil asociado a ese usuario
         perfil_usuario = obtener_perfil(usuario.usuario_id)
         if not perfil_usuario:
             return Response(
@@ -43,7 +35,7 @@ class MatchRecommendationsView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        # 2) Preferencias asociadas al perfil
+        # 3) Preferencias asociadas al perfil
         preferencias = obtener_preferencias_por_perfil(perfil_usuario)
         if not preferencias:
             return Response(
@@ -51,7 +43,7 @@ class MatchRecommendationsView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        # 3) Obtener perfiles sugeridos + score
+        # 4) Obtener perfiles sugeridos + score
         compatibles = obtener_perfiles_sugeridos(
             perfil_usuario,
             preferencias,
@@ -59,7 +51,7 @@ class MatchRecommendationsView(APIView):
             con_score=True,
         )
 
-        # 4) Cargar info de Usuario para todos los perfiles de una sola vez
+        # 5) Cargar info de Usuario para todos los perfiles de una sola vez
         usuario_ids = [perfil_usuario.usuario_id] + [
             p.usuario_id for p, _ in compatibles
         ]
@@ -68,17 +60,32 @@ class MatchRecommendationsView(APIView):
 
         usuario_principal = usuarios_map.get(perfil_usuario.usuario_id)
 
-        # Info del usuario principal
+        # ===== info del usuario principal =====
+        # ubicacion del perfil (si es FK)
+        ubicacion_obj = getattr(perfil_usuario, "ubicacion", None)
+        ubicacion_nombre = None
+        if ubicacion_obj is not None:
+            # ajusta "nombre" si tu modelo la llama diferente
+            ubicacion_nombre = getattr(ubicacion_obj, "nombre", str(ubicacion_obj))
+
         user_info = {
             "usuario_id": perfil_usuario.usuario_id,
             "perfil_id": perfil_usuario.perfil_id,
-            "nombre": getattr(usuario_principal, "nombres", None) if usuario_principal else None,
-            "apellido": getattr(usuario_principal, "apellidos", None) if usuario_principal else None,
+            "nombre": getattr(usuario_principal, "nombres", None)
+            if usuario_principal
+            else None,
+            "apellido": getattr(usuario_principal, "apellidos", None)
+            if usuario_principal
+            else None,
             "hobbies": perfil_usuario.hobbies,
             "estatura": perfil_usuario.estatura,
+            # NUEVO: descripción, edad y ubicación
+            "descripcion": getattr(perfil_usuario, "descripcion", None),
+            "edad": getattr(perfil_usuario, "edad", None),
+            "ubicacion": ubicacion_nombre,
         }
 
-        # ⭐ Info de las preferencias del usuario principal
+        # ===== info de las preferencias del usuario =====
         preferences_info = {
             "hobbies_preferidos": preferencias.hobbies_preferidos,
             "rango_edad_min": preferencias.rango_edad_min,
@@ -89,10 +96,17 @@ class MatchRecommendationsView(APIView):
             "genero_preferido": preferencias.genero_preferido,
         }
 
-        # 5) Armar results: perfil recomendado + nombre + score
+        # ===== results: perfiles recomendados =====
         results = []
         for perfil, score in compatibles:
             u = usuarios_map.get(perfil.usuario_id)
+
+            # ubicacion del recomendado
+            ubicacion_obj = getattr(perfil, "ubicacion", None)
+            ubicacion_nombre = None
+            if ubicacion_obj is not None:
+                ubicacion_nombre = getattr(ubicacion_obj, "nombre", str(ubicacion_obj))
+
             results.append(
                 {
                     "perfil_id": perfil.perfil_id,
@@ -102,6 +116,10 @@ class MatchRecommendationsView(APIView):
                     "hobbies": perfil.hobbies,
                     "estatura": perfil.estatura,
                     "estado": perfil.estado,
+                    # NUEVO:
+                    "descripcion": getattr(perfil, "descripcion", None),
+                    "edad": getattr(perfil, "edad", None),
+                    "ubicacion": ubicacion_nombre,
                     "score": score,
                 }
             )
@@ -109,7 +127,7 @@ class MatchRecommendationsView(APIView):
         return Response(
             {
                 "user": user_info,
-                "preferences": preferences_info,  # 👈 aquí se añaden
+                "preferences": preferences_info,
                 "results": results,
             },
             status=status.HTTP_200_OK,
