@@ -40,6 +40,7 @@ class Usuario(AbstractUser):
     fecharegistro = models.DateTimeField(blank=True, null=True)
     estadocuenta = models.CharField(max_length=1, blank=True, null=True)
     tyc = models.BooleanField(blank=True, null=True)
+    firma = models.TextField(blank=True, null=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['nombres', 'apellidos']

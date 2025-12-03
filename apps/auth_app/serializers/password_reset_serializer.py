@@ -6,8 +6,10 @@ Serializers para recuperación de contraseña.
 """
 
 import logging
+import uuid
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.hashers import make_password
+from django.conf import settings
 from rest_framework import serializers
 from apps.auth_app.models import Usuario
 
@@ -42,7 +44,7 @@ class PasswordResetRequestSerializer(serializers.Serializer):
 
     def save(self):
         """
-        Genera token único, lo guarda en Redis y envía email.
+        Genera token único, lo guarda en Redis y envía email con enlace.
         Siempre responde OK por seguridad (no revela si email existe).
         """
         email = self.validated_data["email"]
@@ -55,17 +57,20 @@ class PasswordResetRequestSerializer(serializers.Serializer):
             logger.info(f"Solicitud de recuperación para email no existente: {email}")
             return
 
-        # Generar token único (usamos el mismo generador de códigos)
-        from apps.auth_app.utils.codes import generate_verification_code
-        reset_token = generate_verification_code(email, ttl=RESET_TOKEN_TTL)
+        # Generar token único (UUID)
+        reset_token = str(uuid.uuid4())
 
         # Guardar token en Redis con clave especial
-        redis_key = f"reset:{email}"
-        set_json(redis_key, {"token": reset_token}, ttl=RESET_TOKEN_TTL)
+        redis_key = f"reset_token:{reset_token}"
+        set_json(redis_key, {"email": email, "used": False}, ttl=RESET_TOKEN_TTL)
+
+        # Construir enlace de restablecimiento
+        frontend_url = settings.FRONTEND_URL[0] if settings.FRONTEND_URL else "https://frontend.cupidocol.com"
+        reset_link = f"{frontend_url}reset-password?token={reset_token}"
 
         # Enviar email (si el usuario existe, pero no verificamos aquí)
         try:
-            email_utils.send_password_reset_email(email, reset_token)
+            email_utils.send_password_reset_email(email, reset_link)
             logger.info(f"Email de recuperación enviado a {email}")
         except Exception as e:
             logger.error(f"Error enviando email de recuperación a {email}: {e}")
@@ -77,19 +82,8 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
     Valida token de recuperación y nueva contraseña.
     Actualiza la contraseña del usuario si todo es válido.
     """
-    email = serializers.EmailField()
-    token = serializers.CharField(min_length=6, max_length=10)
+    token = serializers.CharField(min_length=36, max_length=36)
     nueva_contrasena = serializers.CharField(write_only=True, min_length=8)
-
-    def validate_email(self, value):
-        try:
-            validate_institutional_email(value)
-        except serializers.ValidationError:
-            raise
-        except Exception:
-            if not value.endswith("@unipamplona.edu.co"):
-                raise serializers.ValidationError("Debe usar un correo institucional @unipamplona.edu.co.")
-        return value
 
     def validate_nueva_contrasena(self, value):
         """
@@ -102,42 +96,48 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
         return value
 
     def validate(self, attrs):
-        email = attrs.get("email")
         token = attrs.get("token")
 
         # Verificar token en Redis
-        redis_key = f"reset:{email}"
+        redis_key = f"reset_token:{token}"
         reset_data = get_json(redis_key)
         if not reset_data:
             raise serializers.ValidationError({"token": "Token expirado o inválido."})
 
-        stored_token = reset_data.get("token")
-        if token != stored_token:
-            raise serializers.ValidationError({"token": "Token incorrecto."})
+        if reset_data.get("used", False):
+            raise serializers.ValidationError({"token": "Token ya utilizado."})
+
+        email = reset_data.get("email")
+        if not email:
+            raise serializers.ValidationError({"token": "Token inválido."})
 
         # Verificar que el usuario existe
         try:
             user = Usuario.objects.get(email=email)
         except Usuario.DoesNotExist:
-            raise serializers.ValidationError({"email": "Usuario no encontrado."})
+            raise serializers.ValidationError({"token": "Usuario no encontrado."})
 
         attrs["user"] = user
+        attrs["token_key"] = redis_key
         return attrs
 
     def save(self):
         """
-        Actualiza la contraseña del usuario y elimina el token.
+        Actualiza la contraseña del usuario y marca el token como usado.
         """
         user = self.validated_data["user"]
         nueva_contrasena = self.validated_data["nueva_contrasena"]
-        email = self.validated_data["email"]
+        token_key = self.validated_data["token_key"]
 
         # Hashear nueva contraseña
         user.contrasena = make_password(nueva_contrasena)
         user.save(update_fields=["contrasena"])
 
-        # Eliminar token de Redis
-        delete_key(f"reset:{email}")
+        # Marcar token como usado
+        reset_data = get_json(token_key)
+        if reset_data:
+            reset_data["used"] = True
+            set_json(token_key, reset_data, ttl=RESET_TOKEN_TTL)  # Mantener TTL
 
-        logger.info(f"Contraseña restablecida para usuario {email}")
+        logger.info(f"Contraseña restablecida para usuario {user.email}")
         return user

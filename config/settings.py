@@ -48,6 +48,7 @@ USE_TZ = True
 # -------------------------
 # CORS Configuration
 # -------------------------
+FRONTEND_URL = os.getenv("FRONTEND_URL", "https://frontend.cupidocol.com").split(",")
 CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", "https://frontend.cupidocol.com").split(",")
 CORS_ALLOW_CREDENTIALS = True
 
