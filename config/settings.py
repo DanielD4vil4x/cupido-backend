@@ -1,6 +1,7 @@
 from pathlib import Path
 from datetime import timedelta
 import os
+from urllib.parse import urlparse
 import dj_database_url
 from dotenv import load_dotenv
 
@@ -51,6 +52,23 @@ USE_TZ = True
 FRONTEND_URL = os.getenv("FRONTEND_URL", "https://frontend.cupidocol.com").split(",")
 CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", "https://frontend.cupidocol.com").split(",")
 CORS_ALLOW_CREDENTIALS = True
+
+
+def _extract_host(value: str) -> str | None:
+    trimmed = (value or "").strip()
+    if not trimmed:
+        return None
+    parsed = urlparse(trimmed if "://" in trimmed else f"https://{trimmed}")
+    return parsed.hostname
+
+
+_extra_hosts = [
+    host
+    for source in (FRONTEND_URL + CORS_ALLOWED_ORIGINS)
+    if (host := _extract_host(source))
+]
+
+ALLOWED_HOSTS = list(dict.fromkeys(ALLOWED_HOSTS + _extra_hosts))
 
 # -------------------------
 # Applications

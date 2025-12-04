@@ -9,13 +9,10 @@ from channels.security.websocket import AllowedHostsOriginValidator
 
 from apps.chat_app.middleware import JwtAuthMiddleware
 import apps.chat_app.routing
-
-# 🔥 IMPORTANTE: añadir rutas de notificación
 import apps.notificacion_app.routing
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 
-# ⚡ UNIMOS LAS RUTAS WEBSOCKET DEL CHAT + NOTIFICACIONES
 websocket_urlpatterns = (
     apps.chat_app.routing.websocket_urlpatterns +
     apps.notificacion_app.routing.websocket_urlpatterns
