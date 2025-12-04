@@ -311,15 +311,14 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [os.getenv('REDIS_URL', default='redis://localhost:6379/0')],
-            # Optimización para múltiples conexiones concurrentes
-            "capacity": 1500,  # Número máximo de mensajes en cola por canal
-            "expiry": 10,  # Segundos antes de que expire un mensaje
-            "group_expiry": 86400,  # 24 horas antes de que expire un grupo
+            "hosts": [REDIS_URL],  
+            "capacity": 1500,
+            "expiry": 10,
+            "group_expiry": 86400,
             "channel_capacity": {
                 "http.request": 200,
                 "http.response*": 100,
-                "websocket.send*": 500,  # Aumentar capacidad para WebSocket
+                "websocket.send*": 500,
                 "websocket.receive*": 500,
             },
         },
