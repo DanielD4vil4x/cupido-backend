@@ -89,7 +89,7 @@ INSTALLED_APPS = [
     "apps.match_app",
     "apps.profile_app",
     "apps.reports_app",
-    "apps.chat_app",
+    #"apps.chat_app",
     "apps.preferences_app",
     "apps.notificacion_app",
     # Third-party

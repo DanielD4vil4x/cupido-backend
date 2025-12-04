@@ -3,7 +3,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import IsAuthenticated
 
 from apps.profile_app.subapps.profile.models import Perfil
 from apps.preferences_app.models import Preference
@@ -18,24 +18,43 @@ from .utils import (
 
 class MatchRecommendationsView(APIView):
     """
-    Devuelve una lista de perfiles recomendados para el usuario.
-
-    🔹 En desarrollo dejamos AllowAny para no usar JWT.
+    Devuelve una lista de perfiles recomendados para el usuario autenticado.
     """
 
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
+
+    def get_ubicacion_str(self, perfil: Perfil):
+        """
+        Devuelve la ubicación como texto:
+
+        - Si el FK ubicacion tiene un campo nombre/ciudad, lo usa.
+        - Si no, mapea por ubicacion_id:
+            1 -> Pamplona
+            2 -> Cúcuta
+        """
+        # 1) Intentar leer del objeto FK (si existe y tiene nombre/ciudad)
+        ubicacion_obj = getattr(perfil, "ubicacion", None)
+        if ubicacion_obj is not None:
+            nombre = getattr(ubicacion_obj, "nombre", None) or getattr(
+                ubicacion_obj, "ciudad", None
+            )
+            if nombre:
+                return nombre
+
+        # 2) Fallback por id
+        ubi_id = getattr(perfil, "ubicacion_id", None)
+        if ubi_id == 1:
+            return "Pamplona"
+        if ubi_id == 2:
+            return "Cúcuta"
+
+        return None
 
     def get(self, request, *args, **kwargs):
-        # ⚠️ SOLO PARA PRUEBAS: usuario fijo
-        try:
-            usuario = Usuario.objects.get(email="johan.triana21@unipamplona.edu.co")
-        except Usuario.DoesNotExist:
-            return Response(
-                {"detail": "Usuario de pruebas no exist  e."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        # 1) Usuario autenticado (JWT)
+        usuario: Usuario = request.user
 
-        # 1) Perfil del usuario principal
+        # 2) Perfil asociado a ese usuario
         perfil_usuario = obtener_perfil(usuario.usuario_id)
         if not perfil_usuario:
             return Response(
@@ -43,7 +62,7 @@ class MatchRecommendationsView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        # 2) Preferencias asociadas al perfil
+        # 3) Preferencias asociadas al perfil
         preferencias = obtener_preferencias_por_perfil(perfil_usuario)
         if not preferencias:
             return Response(
@@ -51,7 +70,7 @@ class MatchRecommendationsView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        # 3) Obtener perfiles sugeridos + score
+        # 4) Obtener perfiles sugeridos + score
         compatibles = obtener_perfiles_sugeridos(
             perfil_usuario,
             preferencias,
@@ -59,7 +78,7 @@ class MatchRecommendationsView(APIView):
             con_score=True,
         )
 
-        # 4) Cargar info de Usuario para todos los perfiles de una sola vez
+        # 5) Cargar info de Usuario para todos los perfiles de una sola vez
         usuario_ids = [perfil_usuario.usuario_id] + [
             p.usuario_id for p, _ in compatibles
         ]
@@ -72,13 +91,23 @@ class MatchRecommendationsView(APIView):
         user_info = {
             "usuario_id": perfil_usuario.usuario_id,
             "perfil_id": perfil_usuario.perfil_id,
-            "nombre": getattr(usuario_principal, "nombres", None) if usuario_principal else None,
-            "apellido": getattr(usuario_principal, "apellidos", None) if usuario_principal else None,
+            "nombre": getattr(usuario_principal, "nombres", None)
+            if usuario_principal
+            else None,
+            "apellido": getattr(usuario_principal, "apellidos", None)
+            if usuario_principal
+            else None,
+            # descripción viene de TABLA USUARIO
+            "descripcion": getattr(usuario_principal, "descripcion", None)
+            if usuario_principal
+            else None,
             "hobbies": perfil_usuario.hobbies,
-            "estatura": perfil_usuario.estatura,
+            "estatura": perfil_usuario.estatura,  # en metros para mostrar
+            "edad": getattr(perfil_usuario, "edad", None),
+            "ubicacion": self.get_ubicacion_str(perfil_usuario),
         }
 
-        # ⭐ Info de las preferencias del usuario principal
+        # Info de las preferencias del usuario principal
         preferences_info = {
             "hobbies_preferidos": preferencias.hobbies_preferidos,
             "rango_edad_min": preferencias.rango_edad_min,
@@ -89,18 +118,23 @@ class MatchRecommendationsView(APIView):
             "genero_preferido": preferencias.genero_preferido,
         }
 
-        # 5) Armar results: perfil recomendado + nombre + score
+        # 6) Armar results: perfil recomendado + datos + score
         results = []
         for perfil, score in compatibles:
             u = usuarios_map.get(perfil.usuario_id)
+
             results.append(
                 {
                     "perfil_id": perfil.perfil_id,
                     "usuario_id": perfil.usuario_id,
                     "nombre": getattr(u, "nombres", None) if u else None,
                     "apellido": getattr(u, "apellidos", None) if u else None,
+                    # descripción también desde TABLA USUARIO
+                    "descripcion": getattr(u, "descripcion", None) if u else None,
                     "hobbies": perfil.hobbies,
-                    "estatura": perfil.estatura,
+                    "estatura": perfil.estatura,  # en metros para mostrar
+                    "edad": getattr(perfil, "edad", None),
+                    "ubicacion": self.get_ubicacion_str(perfil),
                     "estado": perfil.estado,
                     "score": score,
                 }
@@ -109,11 +143,8 @@ class MatchRecommendationsView(APIView):
         return Response(
             {
                 "user": user_info,
-                "preferences": preferences_info,  # 👈 aquí se añaden
+                "preferences": preferences_info,
                 "results": results,
             },
             status=status.HTTP_200_OK,
         )
-
-
-
