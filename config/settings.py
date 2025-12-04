@@ -1,6 +1,7 @@
 from pathlib import Path
 from datetime import timedelta
 import os
+from urllib.parse import urlparse
 import dj_database_url
 from dotenv import load_dotenv
 
@@ -51,6 +52,23 @@ USE_TZ = True
 FRONTEND_URL = os.getenv("FRONTEND_URL", "https://frontend.cupidocol.com").split(",")
 CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", "https://frontend.cupidocol.com").split(",")
 CORS_ALLOW_CREDENTIALS = True
+
+
+def _extract_host(value: str) -> str | None:
+    trimmed = (value or "").strip()
+    if not trimmed:
+        return None
+    parsed = urlparse(trimmed if "://" in trimmed else f"https://{trimmed}")
+    return parsed.hostname
+
+
+_extra_hosts = [
+    host
+    for source in (FRONTEND_URL + CORS_ALLOWED_ORIGINS)
+    if (host := _extract_host(source))
+]
+
+ALLOWED_HOSTS = list(dict.fromkeys(ALLOWED_HOSTS + _extra_hosts))
 
 # -------------------------
 # Applications
@@ -293,7 +311,16 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [os.getenv('REDIS_URL', default='redis://localhost:6379/0')],
+            "hosts": [REDIS_URL],  
+            "capacity": 1500,
+            "expiry": 10,
+            "group_expiry": 86400,
+            "channel_capacity": {
+                "http.request": 200,
+                "http.response*": 100,
+                "websocket.send*": 500,
+                "websocket.receive*": 500,
+            },
         },
     },
 }
