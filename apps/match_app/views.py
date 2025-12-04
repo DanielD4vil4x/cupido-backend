@@ -8,6 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 from apps.profile_app.subapps.profile.models import Perfil
 from apps.preferences_app.models import Preference
 from apps.auth_app.models import Usuario
+from apps.profile_app.subapps.imageUpload.models import Imagen
 
 from .utils import (
     obtener_perfil,
@@ -118,10 +119,45 @@ class MatchRecommendationsView(APIView):
             "genero_preferido": preferencias.genero_preferido,
         }
 
+<<<<<<< Updated upstream
         # 6) Armar results: perfil recomendado + datos + score
         results = []
         for perfil, score in compatibles:
             u = usuarios_map.get(perfil.usuario_id)
+=======
+        # 5) Obtener todas las imágenes de los perfiles recomendados
+        perfil_ids = [p.usuario_id for p, _ in compatibles]
+        imagenes = Imagen.objects.filter(usuario_id__in=perfil_ids).order_by('usuario_id', '-es_principal', 'fecha_subida')
+        
+        # Agrupar imágenes por usuario
+        imagenes_map = {}
+        for img in imagenes:
+            if img.usuario_id not in imagenes_map:
+                imagenes_map[img.usuario_id] = []
+            imagenes_map[img.usuario_id].append(img.imagen.url if img.imagen else None)
+
+        # 6) Armar results: perfil recomendado + nombre + score + imágenes
+        results = []
+        for perfil, score in compatibles:
+            u = usuarios_map.get(perfil.usuario_id)
+            
+            # Calcular edad
+            edad = None
+            if u and u.fechanacimiento:
+                from datetime import date
+                today = date.today()
+                born = u.fechanacimiento
+                # Ensure born is a date object (it should be from models.DateField)
+                try:
+                    edad = today.year - born.year - ((today.month, today.day) < (born.month, born.day))
+                except Exception:
+                    edad = None
+
+            # Obtener imágenes del usuario
+            user_images = imagenes_map.get(perfil.usuario_id, [])
+            main_image = user_images[0] if len(user_images) > 0 else None
+            secondary_images = user_images[1:3] if len(user_images) > 1 else []
+>>>>>>> Stashed changes
 
             results.append(
                 {
@@ -129,14 +165,20 @@ class MatchRecommendationsView(APIView):
                     "usuario_id": perfil.usuario_id,
                     "nombre": getattr(u, "nombres", None) if u else None,
                     "apellido": getattr(u, "apellidos", None) if u else None,
+<<<<<<< Updated upstream
                     # descripción también desde TABLA USUARIO
                     "descripcion": getattr(u, "descripcion", None) if u else None,
+=======
+                    "edad": edad,
+>>>>>>> Stashed changes
                     "hobbies": perfil.hobbies,
                     "estatura": perfil.estatura,  # en metros para mostrar
                     "edad": getattr(perfil, "edad", None),
                     "ubicacion": self.get_ubicacion_str(perfil),
                     "estado": perfil.estado,
                     "score": score,
+                    "main_image": main_image,
+                    "secondary_images": secondary_images,
                 }
             )
 
@@ -148,3 +190,10 @@ class MatchRecommendationsView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+<<<<<<< Updated upstream
+=======
+
+
+
+
+>>>>>>> Stashed changes
