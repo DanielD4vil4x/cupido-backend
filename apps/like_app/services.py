@@ -1,16 +1,16 @@
 # apps/like_app/services.py
 
 from django.db import transaction
+from django.db import IntegrityError  # ¡IMPORTANTE! Importar IntegrityError desde django.db
 from django.contrib.auth import get_user_model
 from apps.like_app.models import DetallesLike, Match
-from rest_framework.exceptions import ValidationError # Para errores de validación
+from rest_framework.exceptions import ValidationError
 
 User = get_user_model()
 
-# Esta función realiza toda la lógica de negocio y la devuelve
 def process_user_interaction(emisor_id, receptor_id, accion):
     
-    # --- 1. Validación del Receptor (Se queda en la lógica) ---
+    # --- 1. Validación del Receptor ---
     if emisor_id == receptor_id:
         raise ValidationError({"message": "No puedes interactuar contigo mismo."})
     
@@ -20,7 +20,7 @@ def process_user_interaction(emisor_id, receptor_id, accion):
     except User.DoesNotExist:
          raise ValidationError({"message": "Perfil receptor no encontrado."})
 
-    # --- 2. Lógica de Interacción y Match (El Core) ---
+    # --- 2. Lógica de Interacción y Match ---
     try:
         with transaction.atomic():
             es_match = False
@@ -79,7 +79,7 @@ def process_user_interaction(emisor_id, receptor_id, accion):
                     "status_code": 201
                 }
 
-    except DetallesLike.IntegrityError:
+    except IntegrityError:  # ¡CORREGIDO! Usar IntegrityError directamente
         # Manejo de la violación UNIQUE (interacción duplicada)
         raise ValidationError({"message": "Ya has interactuado con este perfil."})
     
