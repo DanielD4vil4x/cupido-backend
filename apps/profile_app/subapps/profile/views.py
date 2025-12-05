@@ -38,6 +38,16 @@ class PerfilDetailView(generics.RetrieveAPIView):
     serializer_class = PerfilSerializer
     permission_classes = [permissions.AllowAny]  # puedes cambiar a IsAuthenticated si prefieres
 
+    def get_object(self):
+        pk = self.kwargs.get('pk')
+        # 1. Intentar buscar por usuario_id (prioridad para OtherProfilePage)
+        try:
+            return Perfil.objects.get(usuario__usuario_id=pk)
+        except (Perfil.DoesNotExist, ValueError):
+            # 2. Fallback: Buscar por perfil_id (comportamiento estándar)
+            # ValueError captura casos donde pk no es un entero válido para una de las búsquedas
+            return super().get_object()
+
     def get(self, request, *args, **kwargs):
         perfil = self.get_object()
         serializer = self.get_serializer(perfil)
