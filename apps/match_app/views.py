@@ -167,6 +167,7 @@ class MatchRecommendationsView(APIView):
             user_images = imagenes_map.get(perfil.usuario_id, [])
 
             # Generar presigned URLs para las imágenes (válidas por 1 hora)
+            # El frontend las refresca automáticamente cada 45 minutos
             main_image = None
             secondary_images = []
 
