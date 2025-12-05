@@ -11,6 +11,10 @@ User = get_user_model()
 
 def process_user_interaction(emisor_id, receptor_id, accion):
     
+    # Asegurar que los IDs son enteros (receptor_id puede venir como string del JSON)
+    emisor_id = int(emisor_id)
+    receptor_id = int(receptor_id)
+    
     # --- 1. Validación del Receptor ---
     if emisor_id == receptor_id:
         raise ValidationError({"message": "No puedes interactuar contigo mismo."})
