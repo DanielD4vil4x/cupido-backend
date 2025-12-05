@@ -1,7 +1,7 @@
 # apps/like_app/services.py
 
 from django.db import transaction
-from django.db import IntegrityError  # ¡IMPORTANTE! Importar IntegrityError desde django.db
+from django.db import IntegrityError
 from django.contrib.auth import get_user_model
 from apps.like_app.models import DetallesLike
 from apps.match_app.models import Match
@@ -25,43 +25,77 @@ def process_user_interaction(emisor_id, receptor_id, accion):
     except User.DoesNotExist:
          raise ValidationError({"message": "Perfil receptor no encontrado."})
 
-    # --- 2. Lógica de Interacción y Match ---
+    # --- 2. Verificar si ya existe interacción previa ---
+    interaccion_existente = DetallesLike.objects.filter(
+        usuarioEmisor_id=emisor_id,
+        usuarioReceptor_id=receptor_id
+    ).first()
+    
+    if interaccion_existente:
+        # Ya hay una interacción previa, verificar el estado
+        if interaccion_existente.esMutuo:
+            # Ya hay un match mutuo
+            raise ValidationError({"message": "Ya tienes un match con este usuario."})
+        
+        # Si ya dio LIKE antes, no permitir repetir
+        if interaccion_existente.estado == accion:
+            raise ValidationError({"message": "Ya has interactuado con este perfil."})
+        
+        # Si cambió de opinión (ej: DISLIKE -> LIKE), actualizar
+        # Esto NO debería generar match porque el otro usuario ya fue rechazado antes
+
+    # --- 3. Lógica de Interacción y Match ---
     try:
         with transaction.atomic():
             es_match = False
             
             if accion == 'LIKE':
-                # a) Verificar Match Recíproco (B -> A)
+                # a) Verificar Match Recíproco (B -> A con LIKE)
                 like_reciproco = DetallesLike.objects.filter(
                     usuarioEmisor_id=receptor_id,
                     usuarioReceptor_id=emisor_id,
                     estado='LIKE'
                 ).first()
 
-                if like_reciproco:
+                if like_reciproco and not like_reciproco.esMutuo:
                     es_match = True
                     
-                    # b) Actualizar Like Recíproco y Crear Match
+                    # b) Actualizar Like Recíproco
                     like_reciproco.esMutuo = True
                     like_reciproco.save()
                     
+                    # c) Crear Match
                     usuario_a = min(emisor_id, receptor_id)
                     usuario_b = max(emisor_id, receptor_id)
                     
-                    Match.objects.create(
+                    # Verificar que no exista ya el match
+                    match_existente = Match.objects.filter(
                         usuarioA_id=usuario_a,
-                        usuarioB_id=usuario_b,
-                    )
+                        usuarioB_id=usuario_b
+                    ).exists()
+                    
+                    if not match_existente:
+                        Match.objects.create(
+                            usuarioA_id=usuario_a,
+                            usuarioB_id=usuario_b,
+                        )
             
-            # c) Crear la nueva interacción (A -> B)
-            DetallesLike.objects.create(
-                usuarioEmisor_id=emisor_id,
-                usuarioReceptor_id=receptor_id,
-                estado=accion,
-                esMutuo=es_match
-            )
+            # d) Crear o actualizar la interacción (A -> B)
+            if interaccion_existente:
+                # Actualizar interacción existente
+                interaccion_existente.estado = accion
+                interaccion_existente.esMutuo = es_match
+                interaccion_existente.save()
+            else:
+                # Crear nueva interacción
+                DetallesLike.objects.create(
+                    usuarioEmisor_id=emisor_id,
+                    usuarioReceptor_id=receptor_id,
+                    estado=accion,
+                    esMutuo=es_match
+                )
             
-            # --- 3. Devolver Resultado de la Lógica ---
+            # --- 4. Devolver Resultado de la Lógica ---
             if es_match:
                 return {
                     "match_found": True, 
@@ -84,10 +118,8 @@ def process_user_interaction(emisor_id, receptor_id, accion):
                     "status_code": 201
                 }
 
-    except IntegrityError:  # ¡CORREGIDO! Usar IntegrityError directamente
-        # Manejo de la violación UNIQUE (interacción duplicada)
-        raise ValidationError({"message": "Ya has interactuado con este perfil."})
+    except IntegrityError:
+        raise ValidationError({"message": "Error al procesar la interacción."})
     
     except Exception as e:
-        # Errores internos de la DB
         raise Exception(f"Error interno del servicio: {str(e)}")
