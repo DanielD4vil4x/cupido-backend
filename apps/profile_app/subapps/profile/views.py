@@ -50,8 +50,37 @@ class PerfilDetailView(generics.RetrieveAPIView):
 
     def get(self, request, *args, **kwargs):
         perfil = self.get_object()
-        serializer = self.get_serializer(perfil)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        # 1. Serializar Perfil
+        perfil_data = self.get_serializer(perfil).data
+        
+        # 2. Serializar Usuario
+        # Usamos el usuario asociado al perfil
+        usuario = perfil.usuario
+        if usuario:
+            from apps.auth_app.serializers.user_get_serializer import UserGetSerializer
+            user_data = UserGetSerializer(usuario).data
+        else:
+            user_data = None
+            
+        # 3. Serializar Imágenes
+        # Las imágenes están asociadas al usuario
+        imagenes_data = []
+        if usuario:
+            from apps.profile_app.subapps.imageUpload.models import Imagen
+            from apps.profile_app.subapps.imageUpload.serializers import ImagenSerializer
+            # Obtener imágenes del usuario
+            imagenes = Imagen.objects.filter(usuario=usuario)
+            imagenes_data = ImagenSerializer(imagenes, many=True).data
+
+        # 4. Construir respuesta final
+        response_data = {
+            **perfil_data,        # Datos del perfil en la raíz (para compatibilidad)
+            "usuario": user_data, # Datos del usuario anidados
+            "images": imagenes_data # Lista de imágenes
+        }
+        
+        return Response(response_data, status=status.HTTP_200_OK)
 
 
 class PerfilAdminUpdateView(generics.RetrieveUpdateAPIView):
