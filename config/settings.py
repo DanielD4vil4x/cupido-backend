@@ -49,8 +49,8 @@ USE_TZ = True
 # -------------------------
 # CORS Configuration
 # -------------------------
-FRONTEND_URL = os.getenv("FRONTEND_URL", "https://frontend.cupidocol.com").split(",")
-CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", "https://frontend.cupidocol.com").split(",")
+FRONTEND_URL = os.getenv("FRONTEND_URL", "https://cupidocol.com").split(",")
+CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", "https://cupidocol.com").split(",")
 CORS_ALLOW_CREDENTIALS = True
 
 
@@ -89,7 +89,7 @@ INSTALLED_APPS = [
     "apps.match_app",
     "apps.profile_app",
     "apps.reports_app",
-    #"apps.chat_app",
+    "apps.chat_app",
     "apps.preferences_app",
     "apps.notificacion_app",
     # Third-party
