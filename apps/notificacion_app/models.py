@@ -36,6 +36,16 @@ class notificacion(models.Model):
         on_delete=models.CASCADE,
         related_name='notificaciones'
     )
+    
+    # Campo opcional para relacionar notificación con un chat específico
+    # Esto permite actualizar la notificación existente en lugar de crear duplicados
+    chat_relacionado = models.ForeignKey(
+        'chat_app.Chat',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='notificaciones'
+    )
 
     class Meta:
         db_table = 'notificacion'
