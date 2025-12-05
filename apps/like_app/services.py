@@ -118,8 +118,6 @@ def process_user_interaction(emisor_id, receptor_id, accion):
                     "status_code": 201
                 }
 
-    except IntegrityError:
-        raise ValidationError({"message": "Error al procesar la interacción."})
-    
-    except Exception as e:
-        raise Exception(f"Error interno del servicio: {str(e)}")
+    except IntegrityError as e:
+        # Mostrar el error real para debugging
+        raise ValidationError({"message": f"Error de integridad: {str(e)}"})
