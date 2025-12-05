@@ -21,7 +21,7 @@ except ImportError as e:
     DetallesLike = None
 
 try:
-    from apps.like_app.models import Match  
+    from apps.match_app.models import Match  
 except ImportError as e:
     logger.warning(f"No se pudo importar Match: {e}")
     Match = None

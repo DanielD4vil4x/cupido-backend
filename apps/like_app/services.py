@@ -3,7 +3,8 @@
 from django.db import transaction
 from django.db import IntegrityError  # ¡IMPORTANTE! Importar IntegrityError desde django.db
 from django.contrib.auth import get_user_model
-from apps.like_app.models import DetallesLike, Match
+from apps.like_app.models import DetallesLike
+from apps.match_app.models import Match
 from rest_framework.exceptions import ValidationError
 
 User = get_user_model()
