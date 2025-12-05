@@ -11,6 +11,7 @@ from apps.preferences_app.models import Preference
 from apps.auth_app.models import Usuario
 from apps.profile_app.subapps.imageUpload.models import Imagen
 from apps.profile_app.subapps.imageUpload.serializers import ImagenSerializer
+from apps.profile_app.subapps.imageUpload.services import generate_presigned_url
 
 from .utils import (
     obtener_perfil,
@@ -25,6 +26,28 @@ class MatchRecommendationsView(APIView):
     """
 
     permission_classes = [IsAuthenticated]
+
+    def calcular_edad(self, fecha_nacimiento):
+        """
+        Calcula la edad a partir de la fecha de nacimiento.
+
+        Args:
+            fecha_nacimiento: date object con la fecha de nacimiento
+
+        Returns:
+            int: edad en años o None si no hay fecha
+        """
+        if not fecha_nacimiento:
+            return None
+
+        today = date.today()
+        edad = today.year - fecha_nacimiento.year
+
+        # Ajustar si aún no ha cumplido años este año
+        if (today.month, today.day) < (fecha_nacimiento.month, fecha_nacimiento.day):
+            edad -= 1
+
+        return edad
 
     def get_ubicacion_str(self, perfil: Perfil):
         """
@@ -106,7 +129,9 @@ class MatchRecommendationsView(APIView):
             else None,
             "hobbies": perfil_usuario.hobbies,
             "estatura": perfil_usuario.estatura,  # en metros para mostrar
-            "edad": getattr(perfil_usuario, "edad", None),
+            "edad": self.calcular_edad(getattr(usuario_principal, "fechanacimiento", None))
+            if usuario_principal
+            else None,
             "ubicacion": self.get_ubicacion_str(perfil_usuario),
         }
 
@@ -121,30 +146,41 @@ class MatchRecommendationsView(APIView):
             "genero_preferido": preferencias.genero_preferido,
         }
 
-        # 6) Obtener todas las imágenes de los perfiles recomendados (igual que en profile)
+        # 6) Obtener todas las imágenes de los perfiles recomendados
         perfil_ids = [p.usuario_id for p, _ in compatibles]
         imagenes = Imagen.objects.filter(usuario_id__in=perfil_ids).order_by('usuario_id', '-es_principal', 'fecha_subida')
-        
-        # Serializar las imágenes (igual que en profile)
-        imagenes_serialized = ImagenSerializer(imagenes, many=True).data
-        
-        # Agrupar imágenes por usuario
+
+        # Agrupar imágenes por usuario (usando objetos Imagen directamente)
         imagenes_map = {}
-        for img_data in imagenes_serialized:
-            usuario_id = img_data['usuario']
+        for img in imagenes:
+            usuario_id = img.usuario_id
             if usuario_id not in imagenes_map:
                 imagenes_map[usuario_id] = []
-            imagenes_map[usuario_id].append(img_data)
+            imagenes_map[usuario_id].append(img)
 
-        # 7) Armar results: perfil recomendado + datos + score + imágenes
+        # 7) Armar results: perfil recomendado + datos + score + imágenes con presigned URLs
         results = []
         for perfil, score in compatibles:
             u = usuarios_map.get(perfil.usuario_id)
 
-            # Obtener imágenes del usuario (igual que en profile)
+            # Obtener imágenes del usuario
             user_images = imagenes_map.get(perfil.usuario_id, [])
-            main_image = user_images[0]['imagen'] if len(user_images) > 0 else None
-            secondary_images = [img['imagen'] for img in user_images[1:3]] if len(user_images) > 1 else []
+
+            # Generar presigned URLs para las imágenes (válidas por 1 hora)
+            main_image = None
+            secondary_images = []
+
+            if len(user_images) > 0 and user_images[0].imagen:
+                # La imagen principal es la primera (ordenadas por es_principal y fecha)
+                main_image = generate_presigned_url(user_images[0].imagen.name, expiration=3600)
+
+            if len(user_images) > 1:
+                # Imágenes secundarias (máximo 2)
+                for img in user_images[1:3]:
+                    if img.imagen:
+                        url = generate_presigned_url(img.imagen.name, expiration=3600)
+                        if url:
+                            secondary_images.append(url)
 
             results.append(
                 {
@@ -156,7 +192,7 @@ class MatchRecommendationsView(APIView):
                     "descripcion": getattr(u, "descripcion", None) if u else None,
                     "hobbies": perfil.hobbies,
                     "estatura": perfil.estatura,  # en metros para mostrar
-                    "edad": getattr(perfil, "edad", None),
+                    "edad": self.calcular_edad(getattr(u, "fechanacimiento", None)) if u else None,
                     "ubicacion": self.get_ubicacion_str(perfil),
                     "estado": perfil.estado,
                     "score": score,
