@@ -92,6 +92,7 @@ INSTALLED_APPS = [
     "apps.chat_app",
     "apps.preferences_app",
     "apps.notificacion_app",
+    'apps.like_app',
     # Third-party
     "rest_framework",
     "rest_framework_simplejwt",
