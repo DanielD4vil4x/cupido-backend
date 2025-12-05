@@ -1,0 +1,88 @@
+# apps/like_app/services.py
+
+from django.db import transaction
+from django.contrib.auth import get_user_model
+from apps.like_app.models import DetallesLike, Match
+from rest_framework.exceptions import ValidationError # Para errores de validación
+
+User = get_user_model()
+
+# Esta función realiza toda la lógica de negocio y la devuelve
+def process_user_interaction(emisor_id, receptor_id, accion):
+    
+    # --- 1. Validación del Receptor (Se queda en la lógica) ---
+    if emisor_id == receptor_id:
+        raise ValidationError({"message": "No puedes interactuar contigo mismo."})
+    
+    try:
+        # Verificar que el receptor exista
+        User.objects.get(usuario_id=receptor_id) 
+    except User.DoesNotExist:
+         raise ValidationError({"message": "Perfil receptor no encontrado."})
+
+    # --- 2. Lógica de Interacción y Match (El Core) ---
+    try:
+        with transaction.atomic():
+            es_match = False
+            
+            if accion == 'LIKE':
+                # a) Verificar Match Recíproco (B -> A)
+                like_reciproco = DetallesLike.objects.filter(
+                    usuarioEmisor_id=receptor_id,
+                    usuarioReceptor_id=emisor_id,
+                    estado='LIKE'
+                ).first()
+
+                if like_reciproco:
+                    es_match = True
+                    
+                    # b) Actualizar Like Recíproco y Crear Match
+                    like_reciproco.esMutuo = True
+                    like_reciproco.save()
+                    
+                    usuario_a = min(emisor_id, receptor_id)
+                    usuario_b = max(emisor_id, receptor_id)
+                    
+                    Match.objects.create(
+                        usuarioA_id=usuario_a,
+                        usuarioB_id=usuario_b,
+                    )
+            
+            # c) Crear la nueva interacción (A -> B)
+            DetallesLike.objects.create(
+                usuarioEmisor_id=emisor_id,
+                usuarioReceptor_id=receptor_id,
+                estado=accion,
+                esMutuo=es_match
+            )
+            
+            # --- 3. Devolver Resultado de la Lógica ---
+            if es_match:
+                return {
+                    "match_found": True, 
+                    "message": "¡Match Mutuo!", 
+                    "usuario_match": receptor_id,
+                    "status_code": 201
+                }
+            
+            elif accion == 'LIKE':
+                return {
+                    "match_found": False, 
+                    "message": "Like registrado.",
+                    "status_code": 201
+                }
+            
+            else: # DISLIKE
+                return {
+                    "match_found": False, 
+                    "message": "Descarte registrado.",
+                    "status_code": 201
+                }
+
+    except DetallesLike.IntegrityError:
+        # Manejo de la violación UNIQUE (interacción duplicada)
+        raise ValidationError({"message": "Ya has interactuado con este perfil."})
+    
+    except Exception as e:
+        # Errores internos de la DB
+        raise Exception(f"Error interno del servicio: {str(e)}")

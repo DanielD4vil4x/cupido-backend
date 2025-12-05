@@ -42,6 +42,7 @@ urlpatterns = [
     path("api/v1/chat/", include(("apps.chat_app.urls", "chat_app"), namespace="chat")),
     path("api/v1/preferences/", include(("apps.preferences_app.urls", "preferences_app"), namespace="preferences")),
     path("api/v1/notificaciones/", include(("apps.notificacion_app.urls", "notificacion_app"), namespace="notificaciones")),
+    path('api/like/', include('apps.like_app.urls')),
 
 
     #Documentación de API
