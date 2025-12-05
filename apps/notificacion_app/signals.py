@@ -57,13 +57,13 @@ if DetallesLike is not None:
         # Obtener nombre del emisor
         nombre_emisor = usuario_emisor.nombres if hasattr(usuario_emisor, 'nombres') else usuario_emisor.username
         
+        # Solo crear notificación para LIKE, no para DISLIKE
+        if instance.estado != 'LIKE':
+            logger.info(f"No se crea notificación para DISLIKE")
+            return
         
-        if instance.estado == 'LIKE':
-            mensaje = f"❤️ {nombre_emisor} te dio like"
-            tipo_notif = notificacion.EVENT_LIKE
-        else:  # DISLIKE
-            mensaje = f"👎 {nombre_emisor} te dio dislike"
-            tipo_notif = notificacion.EVENT_DISLIKE  
+        mensaje = f"❤️ {nombre_emisor} te dio like"
+        tipo_notif = notificacion.EVENT_LIKE
 
         logger.info(f"Creando notificación: {mensaje} para usuario {usuario_receptor.id}")
 

@@ -21,7 +21,7 @@ class Match(models.Model):
     estadoMatch = models.CharField(max_length=10, default='ACTIVO')
 
     class Meta:
-        db_table = 'match'
+        db_table = 'match_app_match'
         unique_together = ('usuarioA', 'usuarioB')
         verbose_name = "Match"
         verbose_name_plural = "Matches"
