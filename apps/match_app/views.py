@@ -4,11 +4,13 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
+from datetime import date
 
 from apps.profile_app.subapps.profile.models import Perfil
 from apps.preferences_app.models import Preference
 from apps.auth_app.models import Usuario
 from apps.profile_app.subapps.imageUpload.models import Imagen
+from apps.profile_app.subapps.imageUpload.serializers import ImagenSerializer
 
 from .utils import (
     obtener_perfil,
@@ -49,7 +51,7 @@ class MatchRecommendationsView(APIView):
         if ubi_id == 2:
             return "Cúcuta"
 
-        return None
+            return None
 
     def get(self, request, *args, **kwargs):
         # 1) Usuario autenticado (JWT)
@@ -119,10 +121,30 @@ class MatchRecommendationsView(APIView):
             "genero_preferido": preferencias.genero_preferido,
         }
 
-        # 6) Armar results: perfil recomendado + datos + score
+        # 6) Obtener todas las imágenes de los perfiles recomendados (igual que en profile)
+        perfil_ids = [p.usuario_id for p, _ in compatibles]
+        imagenes = Imagen.objects.filter(usuario_id__in=perfil_ids).order_by('usuario_id', '-es_principal', 'fecha_subida')
+        
+        # Serializar las imágenes (igual que en profile)
+        imagenes_serialized = ImagenSerializer(imagenes, many=True).data
+        
+        # Agrupar imágenes por usuario
+        imagenes_map = {}
+        for img_data in imagenes_serialized:
+            usuario_id = img_data['usuario']
+            if usuario_id not in imagenes_map:
+                imagenes_map[usuario_id] = []
+            imagenes_map[usuario_id].append(img_data)
+
+        # 7) Armar results: perfil recomendado + datos + score + imágenes
         results = []
         for perfil, score in compatibles:
             u = usuarios_map.get(perfil.usuario_id)
+
+            # Obtener imágenes del usuario (igual que en profile)
+            user_images = imagenes_map.get(perfil.usuario_id, [])
+            main_image = user_images[0]['imagen'] if len(user_images) > 0 else None
+            secondary_images = [img['imagen'] for img in user_images[1:3]] if len(user_images) > 1 else []
 
             results.append(
                 {
