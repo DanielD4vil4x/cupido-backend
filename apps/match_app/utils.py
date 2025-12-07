@@ -257,46 +257,22 @@ def calcular_score(preferencias: Preference, perfil: Perfil) -> float:
 # Perfiles sugeridos (feed)
 # ===============================
 
-def obtener_usuarios_ya_interactuados(user_id: int) -> Set[int]:
-    """
-    Obtiene los IDs de usuarios con los que ya hubo interacción (LIKE o DISLIKE).
-    Estos usuarios no deben aparecer en las recomendaciones.
-    """
-    from apps.like_app.models import DetallesLike
-    
-    # Obtener todos los usuarios a los que este usuario ya dio like/dislike
-    interacciones = DetallesLike.objects.filter(
-        usuarioEmisor_id=user_id
-    ).values_list('usuarioReceptor_id', flat=True)
-    
-    return set(interacciones)
-
-
 def obtener_perfiles_sugeridos(
     perfil_usuario: Perfil,
     preferencias: Preference,
-    limite: int = 100,  # Cambiado de 30 a 100
+    limite: int = 30,
     con_score: bool = False,
 ):
     """
     Devuelve:
       - si con_score == False: lista de Perfiles sugeridos
       - si con_score == True: lista de tuplas (Perfil, score)
-    
-    Excluye usuarios con los que ya hubo interacción (like/dislike previo).
     """
     otros = obtener_otros_perfiles(perfil_usuario)
-    
-    # Obtener usuarios ya interactuados para excluirlos
-    usuarios_excluidos = obtener_usuarios_ya_interactuados(perfil_usuario.usuario_id)
 
     compatibles: List[tuple[Perfil, float]] = []
 
     for p in otros:
-        # Excluir usuarios con interacción previa
-        if p.usuario_id in usuarios_excluidos:
-            continue
-            
         hard_ok = perfil_cumple_preferencias(p, preferencias)
         score = calcular_score(preferencias, p)
 
