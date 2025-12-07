@@ -49,8 +49,8 @@ USE_TZ = True
 # -------------------------
 # CORS Configuration
 # -------------------------
-FRONTEND_URL = os.getenv("FRONTEND_URL", "https://frontend.cupidocol.com").split(",")
-CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", "https://frontend.cupidocol.com").split(",")
+FRONTEND_URL = os.getenv("FRONTEND_URL", "https://cupidocol.com").split(",")
+CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", "https://cupidocol.com").split(",")
 CORS_ALLOW_CREDENTIALS = True
 
 
@@ -92,6 +92,7 @@ INSTALLED_APPS = [
     "apps.chat_app",
     "apps.preferences_app",
     "apps.notificacion_app",
+    'apps.like_app',
     # Third-party
     "rest_framework",
     "rest_framework_simplejwt",
@@ -261,12 +262,14 @@ REST_FRAMEWORK = {
 # JWT Configuration
 # -------------------------
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),  # Aumentado de 15 a 30 minutos para mejor UX
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
     "AUTH_HEADER_TYPES": ("Bearer",),
     "USER_ID_FIELD": "usuario_id",
+    "USER_ID_CLAIM": "usuario_id",  # CRÍTICO: debe coincidir con USER_ID_FIELD
+    "UPDATE_LAST_LOGIN": False,  # No actualizar last_login en cada refresh (mejor performance)
 }
 
 # -------------------------

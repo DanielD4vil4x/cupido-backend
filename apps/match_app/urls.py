@@ -9,11 +9,22 @@
 
 from django.urls import path
 from .views import MatchRecommendationsView
+from .views_refresh import RefreshImageURLsView, RefreshMatchImagesView
 
 urlpatterns = [
     path(
         "recommendations/",
         MatchRecommendationsView.as_view(),
         name="match-recommendations",
+    ),
+    path(
+        "refresh-images/",
+        RefreshImageURLsView.as_view(),
+        name="refresh-image-urls",
+    ),
+    path(
+        "refresh-profile-images/",
+        RefreshMatchImagesView.as_view(),
+        name="refresh-profile-images",
     ),
 ]
